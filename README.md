@@ -1,5 +1,5 @@
 # grimd
-:zap: fast golang dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers
+:zap: fast dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers
 
 # install
 simply download the release for your operating system, and run grimd!
