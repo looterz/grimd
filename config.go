@@ -33,7 +33,7 @@ type config struct {
 	Whitelist        []string
 }
 
-const defaultConfig = `# list of sources to pull adlists from
+const defaultConfig = `# list of sources to pull blocklists from
 sources = [
 "http://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
