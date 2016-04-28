@@ -5,7 +5,7 @@
 simply download the release for your operating system, and run grimd!
 
 # config
-if a config is not found, it will be generated for you, below is the default configuration
+if grimd.toml is not found, it will be generated for you, below is the default configuration
 ```toml
 # list of sources to pull blocklists from
 sources = [
@@ -53,12 +53,12 @@ expire = 600
 maxcount = 0
 
 # question cache capacity, 0 for infinite but not recommended (this is used for storing logs)
-questioncachecap = 1000
+questioncachecap = 5000
 
 # manual blocklist entries
 blocklist = []
 
-# manual whitelist entries (TODO: change to seperate host formatted file)
+# manual whitelist entries
 whitelist = [
 	"getsentry.com",
 	"www.getsentry.com"
