@@ -78,4 +78,25 @@ grimd exposes a restful json api by default on the local interface, allowing you
 ![reaper-example](http://i.imgur.com/UW1uvOC.png)
 
 # speed
-all incoming requests spawn a goroutine and are served asynchronously, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
+incoming requests spawn a goroutine and are served asynchronously, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
+
+# systemd
+below is a working grimd.service for use with systemd which updates the blocklists every time it starts
+```service
+[Unit]
+Description=grimd dns proxy
+Documentation=https://github.com/looterz/grimd
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/grim
+LimitNOFILE=4096
+PIDFile=/var/run/grimd/grimd.pid
+ExecStart=/root/grim/grimd -update
+Restart=always
+StartLimitInterval=30
+
+[Install]
+WantedBy=multi-user.target
+```
