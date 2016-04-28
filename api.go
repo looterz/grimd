@@ -28,6 +28,10 @@ func StartAPIServer() error {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length(), "items": QuestionCache.Backend})
 	})
 
+	router.GET("/questioncache/length", func(c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length()})
+	})
+
 	router.GET("/questioncache/clear", func(c *gin.Context) {
 		QuestionCache.Clear()
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})

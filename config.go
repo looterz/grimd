@@ -79,12 +79,12 @@ expire = 600
 maxcount = 0
 
 # question cache capacity, 0 for infinite but not recommended (this is used for storing logs)
-questioncachecap = 1000
+questioncachecap = 5000
 
 # manual blocklist entries
 blocklist = []
 
-# manual whitelist entries (TODO: change to seperate host formatted file)
+# manual whitelist entries
 whitelist = [
 	"getsentry.com",
 	"www.getsentry.com"

@@ -152,7 +152,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 
 			// log query
 			NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: true}
-			QuestionCache.Add(NewEntry)
+			go QuestionCache.Add(NewEntry)
 
 			// cache the block
 			err := h.cache.Set(key, m)
@@ -169,7 +169,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 
 	// log query
 	NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
-	QuestionCache.Add(NewEntry)
+	go QuestionCache.Add(NewEntry)
 
 	mesg, err := h.resolver.Lookup(Net, req)
 
