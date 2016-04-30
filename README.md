@@ -1,4 +1,5 @@
 # grimd
+[![Build Status](https://travis-ci.org/looterz/grimd.svg)](https://travis-ci.org/looterz/grimd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/looterz/grimd)](https://goreportcard.com/report/github.com/looterz/grimd)
 
 :zap: fast dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers
