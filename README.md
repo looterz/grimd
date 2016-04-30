@@ -5,7 +5,11 @@
 :zap: fast dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers
 
 # install
-simply download the release for your operating system, and run grimd!
+```
+go get github.com/looterz/grimd
+```
+
+or download one of the [releases](https://github.com/looterz/grimd/releases)
 
 # config
 if grimd.toml is not found, it will be generated for you, below is the default configuration
