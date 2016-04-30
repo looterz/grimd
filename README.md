@@ -79,9 +79,8 @@ env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
 
 # web api
-grimd exposes a restful json api by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache.
+grimd exposes a restful json api by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend, and will likely get a makeover when the [Buoy](http://jessecha.se/work/buoy.html) framework releases later this year.
 
-[reaper](https://github.com/looterz/reaper) is the default grimd web frontend
 ![reaper-example](http://i.imgur.com/UW1uvOC.png)
 
 # speed
