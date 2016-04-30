@@ -9,6 +9,8 @@ import (
 
 // StartAPIServer launches the API server
 func StartAPIServer() error {
+	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.Default()
 
 	router.Use(func(c *gin.Context) {

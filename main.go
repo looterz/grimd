@@ -35,15 +35,19 @@ func main() {
 	}
 	defer logFile.Close()
 
-	if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
-		if err := Update(); err != nil {
+	// delay updating the blocklists, cache until the server starts and can serve requests as the local resolver
+	timer := time.NewTimer(time.Second * 1)
+	go func() {
+		<-timer.C
+		if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
+			if err := Update(); err != nil {
+				log.Fatal(err)
+			}
+		}
+		if err := UpdateBlockCache(); err != nil {
 			log.Fatal(err)
 		}
-	}
-
-	if err := UpdateBlockCache(); err != nil {
-		log.Fatal(err)
-	}
+	}()
 
 	server := &Server{
 		host:     Config.Bind,
