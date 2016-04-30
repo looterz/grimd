@@ -85,7 +85,7 @@ grimd exposes a restful json api by default on the local interface, allowing you
 ![reaper-example](http://i.imgur.com/UW1uvOC.png)
 
 # speed
-incoming requests spawn a goroutine and are served asynchronously, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
+incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
 
 # systemd
 below is a grimd.service example for use with systemd which updates the blocklists every time it starts
