@@ -26,7 +26,7 @@ func TestCache(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, err := cache.Get(testDomain); err != nil {
+	if _, err := cache.Get(testDomain); err != nil && err.Error() != fmt.Sprintf("%s expired", testDomain) {
 		t.Error(err)
 	}
 
