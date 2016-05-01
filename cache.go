@@ -168,6 +168,13 @@ func (c *MemoryBlockCache) Get(key string) (bool, error) {
 	return val, nil
 }
 
+// Remove removes an entry from the cache
+func (c *MemoryBlockCache) Remove(key string) {
+	c.mu.Lock()
+	delete(c.Backend, key)
+	c.mu.Unlock()
+}
+
 // Set sets a value in the BlockCache
 func (c *MemoryBlockCache) Set(key string, value bool) error {
 	c.mu.Lock()
