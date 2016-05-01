@@ -22,8 +22,32 @@ func StartAPIServer() error {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length(), "items": BlockCache.Backend})
 	})
 
+	router.GET("/blockcache/exists/:key", func(c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, gin.H{"exists": BlockCache.Exists(c.Param("key"))})
+	})
+
+	router.GET("/blockcache/get/:key", func(c *gin.Context) {
+		if ok, _ := BlockCache.Get(c.Param("key")); !ok {
+			c.IndentedJSON(http.StatusOK, gin.H{"error": c.Param("key") + " not found"})
+		} else {
+			c.IndentedJSON(http.StatusOK, gin.H{"success": ok})
+		}
+	})
+
 	router.GET("/blockcache/length", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length()})
+	})
+
+	router.GET("/blockcache/remove/:key", func(c *gin.Context) {
+		// Removes from BlockCache only. If the domain has already been queried and placed into MemoryCache, will need to wait until item is expired.
+		BlockCache.Remove(c.Param("key"))
+		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
+	})
+
+	router.GET("/blockcache/set/:key", func(c *gin.Context) {
+		// MemoryBlockCache Set() always returns nil, so ignoring response.
+		_ = BlockCache.Set(c.Param("key"), true)
+		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/questioncache", func(c *gin.Context) {
