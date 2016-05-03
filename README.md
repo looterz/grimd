@@ -3,21 +3,19 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/looterz/grimd)](https://goreportcard.com/report/github.com/looterz/grimd)
 [![GoDoc](https://godoc.org/github.com/looterz/grimd?status.svg)](http://godoc.org/github.com/looterz/grimd)
 
-:zap: fast dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers.
+:zap: Fast dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers.
 
-based on [kenshinx/godns](https://github.com/kenshinx/godns) and [miekg/dns](https://github.com/miekg/dns).
+Based on [kenshinx/godns](https://github.com/kenshinx/godns) and [miekg/dns](https://github.com/miekg/dns).
 
-# install
+# Installation
 ```
 go get github.com/looterz/grimd
 ```
 
-or download one of the [releases](https://github.com/looterz/grimd/releases)
+You can also download one of the [releases](https://github.com/looterz/grimd/releases), detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki).
 
-More detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki)
-
-# config
-if grimd.toml is not found, it will be generated for you, below is the default configuration
+# Configuration
+If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -82,22 +80,22 @@ whitelist = [
 ]
 ```
 
-# building
-requires golang 1.6, you build grimd like any other golang application, for example to build for linux x64
+# Building
+Requires golang 1.6, you build grimd like any other golang application, for example to build for linux x64
 ```shell
 env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
 
-# web api
-grimd exposes a restful json api by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend, and will likely get a makeover when the [Buoy](http://jessecha.se/work/buoy.html) framework releases later this year.
+# Web API
+A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend, and will likely get a makeover when the [Buoy](http://jessecha.se/work/buoy.html) framework releases later this year.
 
 ![reaper-example](http://i.imgur.com/UW1uvOC.png)
 
-# speed
-incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
+# Speed
+Incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
 
 # systemd
-below is a grimd.service example for use with systemd which updates the blocklists every time it starts
+Below is a grimd.service example for use with systemd which updates the blocklists every time it starts.
 ```service
 [Unit]
 Description=grimd dns proxy
@@ -109,7 +107,7 @@ User=root
 WorkingDirectory=/root/grim
 LimitNOFILE=4096
 PIDFile=/var/run/grimd/grimd.pid
-ExecStart=/root/grim/grimd -update
+ExecStart=/root/grim/grimd_linux_x64 -update
 Restart=always
 StartLimitInterval=30
 
