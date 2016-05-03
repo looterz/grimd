@@ -12,7 +12,7 @@ import (
 )
 
 // Version returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-const Version = "1.0.2"
+var Version = "1.0.2"
 
 type config struct {
 	Version          string
@@ -35,8 +35,8 @@ type config struct {
 	Whitelist        []string
 }
 
-const defaultConfig = `# version this config was generated from
-version = %s
+var defaultConfig = `# version this config was generated from
+version = "%s"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -112,16 +112,16 @@ func LoadConfig(path string) error {
 		}
 	}
 
+	if _, err := toml.DecodeFile(path, &Config); err != nil {
+		return fmt.Errorf("could not load config: %s", err)
+	}
+
 	if Config.Version != Version {
 		if Config.Version == "" {
 			Config.Version = "none"
 		}
 
 		log.Printf("warning, grimd.toml is out of date!\nconfig version: %s\ngrimd version: %s\nplease update your config\n", Config.Version, Version)
-	}
-
-	if _, err := toml.DecodeFile(path, &Config); err != nil {
-		return fmt.Errorf("could not load config: %s", err)
 	}
 
 	return nil
