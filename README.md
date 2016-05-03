@@ -14,6 +14,8 @@ go get github.com/looterz/grimd
 
 or download one of the [releases](https://github.com/looterz/grimd/releases)
 
+More detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki)
+
 # config
 if grimd.toml is not found, it will be generated for you, below is the default configuration
 ```toml
