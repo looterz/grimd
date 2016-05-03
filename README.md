@@ -17,7 +17,7 @@ or download one of the [releases](https://github.com/looterz/grimd/releases)
 # config
 if grimd.toml is not found, it will be generated for you, below is the default configuration
 ```toml
-# list of sources to pull blocklists from
+# list of sources to pull blocklists from, stores them in ./sources
 sources = [
 "http://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -27,6 +27,11 @@ sources = [
 "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
 "http://hosts-file.net/ad_servers.txt",
 "https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+]
+
+# list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
+sourcedirs = [
+"sources"
 ]
 
 # location of the log file

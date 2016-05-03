@@ -11,11 +11,13 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// Version returns the version of grimd
-const Version = "0.0.1"
+// Version returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
+const Version = "1.0.2"
 
 type config struct {
+	Version          string
 	Sources          []string
+	SourceDirs       []string
 	Log              string
 	LogLevel         int
 	Bind             string
@@ -33,7 +35,10 @@ type config struct {
 	Whitelist        []string
 }
 
-const defaultConfig = `# list of sources to pull blocklists from
+const defaultConfig = `# version this config was generated from
+version = %s
+
+# list of sources to pull blocklists from, stores them in ./sources
 sources = [
 "http://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -43,6 +48,11 @@ sources = [
 "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
 "http://hosts-file.net/ad_servers.txt",
 "https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+]
+
+# list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
+sourcedirs = [
+"sources"
 ]
 
 # location of the log file
@@ -102,6 +112,14 @@ func LoadConfig(path string) error {
 		}
 	}
 
+	if Config.Version != Version {
+		if Config.Version == "" {
+			Config.Version = "none"
+		}
+
+		log.Printf("warning, grimd.toml is out of date!\nconfig version: %s\ngrimd version: %s\nplease update your config\n", Config.Version, Version)
+	}
+
 	if _, err := toml.DecodeFile(path, &Config); err != nil {
 		return fmt.Errorf("could not load config: %s", err)
 	}
@@ -116,7 +134,7 @@ func generateConfig(path string) error {
 	}
 	defer output.Close()
 
-	r := strings.NewReader(defaultConfig)
+	r := strings.NewReader(fmt.Sprintf(defaultConfig, Version))
 	if _, err := io.Copy(output, r); err != nil {
 		return fmt.Errorf("could not copy default config: %s", err)
 	}
