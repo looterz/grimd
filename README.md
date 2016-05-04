@@ -94,23 +94,5 @@ A restful json api is exposed by default on the local interface, allowing you to
 # Speed
 Incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
 
-# systemd
-Below is a grimd.service example for use with systemd which updates the blocklists every time it starts.
-```service
-[Unit]
-Description=grimd dns proxy
-Documentation=https://github.com/looterz/grimd
-After=network.target
-
-[Service]
-User=root
-WorkingDirectory=/root/grim
-LimitNOFILE=4096
-PIDFile=/var/run/grimd/grimd.pid
-ExecStart=/root/grim/grimd_linux_x64 -update
-Restart=always
-StartLimitInterval=30
-
-[Install]
-WantedBy=multi-user.target
-```
+# Daemonize
+You can find examples of different daemon scripts for grimd on the [wiki](https://github.com/looterz/grimd/wiki/Daemon-Scripts)
