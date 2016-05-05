@@ -9,7 +9,9 @@ import (
 
 // StartAPIServer launches the API server
 func StartAPIServer() error {
-	gin.SetMode(gin.ReleaseMode)
+	if Config.LogLevel == 0 {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	router := gin.Default()
 
