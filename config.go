@@ -121,7 +121,9 @@ func LoadConfig(path string) error {
 			Config.Version = "none"
 		}
 
-		log.Printf("warning, grimd.toml is out of date!\nconfig version: %s\ngrimd version: %s\nplease update your config\n", Config.Version, Version)
+		log.Printf("warning, grimd.toml is out of date!\nconfig v%s\ngrimd v%s\nplease update your config\n", Config.Version, Version)
+	} else {
+		log.Printf("grimd v%s\n", Version)
 	}
 
 	return nil
