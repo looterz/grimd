@@ -1,7 +1,7 @@
 # grimd
 [![Travis](https://img.shields.io/travis/looterz/grimd.svg?maxAge=2592000&style=flat-square)](https://travis-ci.org/looterz/grimd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/looterz/grimd?style=flat-square)](https://goreportcard.com/report/github.com/looterz/grimd)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/looterz/grimd) 
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/looterz/grimd)
 
 :zap: Fast dns proxy that can run anywhere, built to black-hole internet advertisements and malware servers.
 
@@ -87,7 +87,7 @@ env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
 
 # Web API
-A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend, and will likely get a makeover when the [Buoy](http://jessecha.se/work/buoy.html) framework releases later this year.
+A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
 
 ![reaper-example](http://i.imgur.com/UW1uvOC.png)
 
