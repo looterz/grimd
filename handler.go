@@ -184,6 +184,20 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		return
 	}
 
+	if mesg.Truncated && Net == "udp" {
+		mesg, err = h.resolver.Lookup("tcp", req)
+		if err != nil {
+			log.Printf("resolve tcp query error %s\n", err)
+			dns.HandleFailed(w, req)
+
+			// cache the failure, too!
+			if err = h.negCache.Set(key, nil); err != nil {
+				log.Printf("set %s negative cache failed: %v\n", Q.String(), err)
+			}
+			return
+		}
+	}
+
 	w.WriteMsg(mesg)
 
 	if IPQuery > 0 && len(mesg.Answer) > 0 {
