@@ -2,7 +2,6 @@ sudo: required
 language: go
 go:
  - 1.6.2
- - release
  - tip
 
 script:
