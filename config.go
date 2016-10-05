@@ -33,6 +33,7 @@ type config struct {
 	TTL              uint32
 	Blocklist        []string
 	Whitelist        []string
+	ToggleName       string
 }
 
 var defaultConfig = `# version this config was generated from
@@ -99,6 +100,8 @@ whitelist = [
 	"getsentry.com",
 	"www.getsentry.com"
 ]
+
+togglename = ""
 `
 
 // Config is the global configuration

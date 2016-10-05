@@ -12,6 +12,7 @@ import (
 var (
 	configPath  string
 	forceUpdate bool
+	grimdActive bool
 
 	// BlockCache contains all blocked domains
 	BlockCache = &MemoryBlockCache{Backend: make(map[string]bool)}
@@ -49,6 +50,7 @@ func main() {
 		}
 	}()
 
+	grimdActive = true
 	server := &Server{
 		host:     Config.Bind,
 		rTimeout: 5 * time.Second,
