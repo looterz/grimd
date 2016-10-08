@@ -9,12 +9,11 @@ import (
 	"time"
 )
 
-
 var (
-	configPath  string
-	forceUpdate bool
-	grimdActive bool
-    grimdActivation ActivationHandler
+	configPath      string
+	forceUpdate     bool
+	grimdActive     bool
+	grimdActivation ActivationHandler
 
 	// BlockCache contains all blocked domains
 	BlockCache = &MemoryBlockCache{Backend: make(map[string]bool)}
@@ -54,8 +53,8 @@ func main() {
 	}()
 
 	grimdActive = true
-    quit_activation := make(chan bool)
-    go grimdActivation.loop(quit_activation)
+	quit_activation := make(chan bool)
+	go grimdActivation.loop(quit_activation)
 
 	server := &Server{
 		host:     Config.Bind,
@@ -71,7 +70,6 @@ func main() {
 
 	sig := make(chan os.Signal)
 	signal.Notify(sig, os.Interrupt)
-	
 
 forever:
 	for {

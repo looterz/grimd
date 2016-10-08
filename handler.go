@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/miekg/dns"
@@ -67,6 +68,7 @@ func NewHandler() *DNSHandler {
 }
 
 func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
+    log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	defer w.Close()
 	q := req.Question[0]
 	Q := Question{UnFqdn(q.Name), dns.TypeToString[q.Qtype], dns.ClassToString[q.Qclass]}
@@ -82,10 +84,10 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		log.Printf("%s lookup　%s\n", remote, Q.String())
 	}
 
-    var grimdActive = grimdActivation.query()
-	if Q.Qname == Config.ToggleName {
+	var grimdActive = grimdActivation.query()
+	if strings.Contains(Q.Qname, Config.ToggleName) {
 		if Config.LogLevel > 0 {
-			log.Printf("Found ToggleName %s\n", Q.Qname)
+			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
 		}
 		grimdActive = grimdActivation.toggle()
 
