@@ -82,11 +82,12 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		log.Printf("%s lookup　%s\n", remote, Q.String())
 	}
 
+    var grimdActive = grimdActivation.query()
 	if Q.Qname == Config.ToggleName {
 		if Config.LogLevel > 0 {
 			log.Printf("Found ToggleName %s\n", Q.Qname)
 		}
-		grimdActive = !grimdActive
+		grimdActive = grimdActivation.toggle()
 
 		if Config.LogLevel > 0 {
 			if grimdActive {
@@ -103,14 +104,13 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	key := KeyGen(Q)
 	if IPQuery > 0 {
 		mesg, blocked, err := h.cache.Get(key)
-		log.Printf("blocked: %s\n", blocked)
 		if err != nil {
 			if mesg, blocked, err = h.negCache.Get(key); err != nil {
-				if Config.LogLevel > 0 {
+				if Config.LogLevel > 1 {
 					log.Printf("%s didn't hit cache\n", Q.String())
 				}
 			} else {
-				if Config.LogLevel > 0 {
+				if Config.LogLevel > 1 {
 					log.Printf("%s hit negative cache\n", Q.String())
 				}
 				dns.HandleFailed(w, req)
@@ -118,11 +118,11 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			}
 		} else {
 			if blocked && !grimdActive {
-				if Config.LogLevel > 0 {
+				if Config.LogLevel > 1 {
 					log.Printf("%s hit cache and was blocked: forwarding request\n", Q.String())
 				}
 			} else {
-				if Config.LogLevel > 0 {
+				if Config.LogLevel > 1 {
 					log.Printf("%s hit cache\n", Q.String())
 				}
 

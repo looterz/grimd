@@ -15,25 +15,26 @@ import (
 var Version = "1.0.2"
 
 type config struct {
-	Version          string
-	Sources          []string
-	SourceDirs       []string
-	Log              string
-	LogLevel         int
-	Bind             string
-	API              string
-	Nullroute        string
-	Nullroutev6      string
-	Nameservers      []string
-	Interval         int
-	Timeout          int
-	Expire           int
-	Maxcount         int
-	QuestionCacheCap int
-	TTL              uint32
-	Blocklist        []string
-	Whitelist        []string
-	ToggleName       string
+	Version            string
+	Sources            []string
+	SourceDirs         []string
+	Log                string
+	LogLevel           int
+	Bind               string
+	API                string
+	Nullroute          string
+	Nullroutev6        string
+	Nameservers        []string
+	Interval           int
+	Timeout            int
+	Expire             int
+	Maxcount           int
+	QuestionCacheCap   int
+	TTL                uint32
+	Blocklist          []string
+	Whitelist          []string
+	ToggleName         string
+	ReactivationDelay  uint
 }
 
 var defaultConfig = `# version this config was generated from
@@ -101,7 +102,12 @@ whitelist = [
 	"www.getsentry.com"
 ]
 
+# When this string is queried, toggle grimd on and off
 togglename = ""
+
+# If not zero, the delay in seconds before grimd automaticall reactivates after
+# having been turned off.
+reactivationdelay = 300
 `
 
 // Config is the global configuration
