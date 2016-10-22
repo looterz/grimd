@@ -108,7 +108,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			// we need this copy against concurrent modification of Id
 			msg := *mesg
 			msg.Id = req.Id
-			w.WriteMsg(&msg)
+			h.WriteReplyMsg(w, &msg)
 			return
 		}
 	}
@@ -144,7 +144,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 				m.Answer = append(m.Answer, a)
 			}
 
-			w.WriteMsg(m)
+			h.WriteReplyMsg(w, m)
 
 			if Config.LogLevel > 0 {
 				log.Printf("%s found in blocklist\n", Q.Qname)
@@ -198,7 +198,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		}
 	}
 
-	w.WriteMsg(mesg)
+	h.WriteReplyMsg(w, mesg)
 
 	if IPQuery > 0 && len(mesg.Answer) > 0 {
 		err = h.cache.Set(key, mesg)
@@ -219,6 +219,19 @@ func (h *DNSHandler) DoTCP(w dns.ResponseWriter, req *dns.Msg) {
 // DoUDP begins a udp query
 func (h *DNSHandler) DoUDP(w dns.ResponseWriter, req *dns.Msg) {
 	go h.do("udp", w, req)
+}
+
+func (h *DNSHandler) WriteReplyMsg(w dns.ResponseWriter, message *dns.Msg) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered in WriteReplyMsg: %s\n", r)
+		}
+	}()
+
+	err := w.WriteMsg(message)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (h *DNSHandler) isIPQuery(q dns.Question) int {
