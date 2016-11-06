@@ -68,7 +68,7 @@ func NewHandler() *DNSHandler {
 }
 
 func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
-    log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	defer w.Close()
 	q := req.Question[0]
 	Q := Question{UnFqdn(q.Name), dns.TypeToString[q.Qtype], dns.ClassToString[q.Qclass]}
@@ -128,14 +128,14 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 					log.Printf("%s hit cache\n", Q.String())
 				}
 
-			// we need this copy against concurrent modification of Id
-			msg := *mesg
-			msg.Id = req.Id
-			h.WriteReplyMsg(w, &msg)
-			return
+				// we need this copy against concurrent modification of Id
+				msg := *mesg
+				msg.Id = req.Id
+				h.WriteReplyMsg(w, &msg)
+				return
+			}
 		}
 	}
-
 	// Check blocklist
 	var blacklisted bool = false
 
