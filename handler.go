@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/miekg/dns"
@@ -67,6 +68,7 @@ func NewHandler() *DNSHandler {
 }
 
 func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	defer w.Close()
 	q := req.Question[0]
 	Q := Question{UnFqdn(q.Name), dns.TypeToString[q.Qtype], dns.ClassToString[q.Qclass]}
@@ -82,41 +84,65 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		log.Printf("%s lookup　%s\n", remote, Q.String())
 	}
 
+	var grimdActive = grimdActivation.query()
+	if strings.Contains(Q.Qname, Config.ToggleName) {
+		if Config.LogLevel > 0 {
+			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
+		}
+		grimdActive = grimdActivation.toggle()
+
+		if Config.LogLevel > 0 {
+			if grimdActive {
+				log.Print("Grimd Activated")
+			} else {
+				log.Print("Grimd Deactivated")
+			}
+		}
+	}
+
 	IPQuery := h.isIPQuery(q)
 
 	// Only query cache when qtype == 'A'|'AAAA' , qclass == 'IN'
 	key := KeyGen(Q)
 	if IPQuery > 0 {
-		mesg, err := h.cache.Get(key)
+		mesg, blocked, err := h.cache.Get(key)
 		if err != nil {
-			if mesg, err = h.negCache.Get(key); err != nil {
-				if Config.LogLevel > 0 {
+			if mesg, blocked, err = h.negCache.Get(key); err != nil {
+				if Config.LogLevel > 1 {
 					log.Printf("%s didn't hit cache\n", Q.String())
 				}
 			} else {
-				if Config.LogLevel > 0 {
+				if Config.LogLevel > 1 {
 					log.Printf("%s hit negative cache\n", Q.String())
 				}
 				dns.HandleFailed(w, req)
 				return
 			}
 		} else {
-			if Config.LogLevel > 0 {
-				log.Printf("%s hit cache\n", Q.String())
-			}
+			if blocked && !grimdActive {
+				if Config.LogLevel > 1 {
+					log.Printf("%s hit cache and was blocked: forwarding request\n", Q.String())
+				}
+			} else {
+				if Config.LogLevel > 1 {
+					log.Printf("%s hit cache\n", Q.String())
+				}
 
-			// we need this copy against concurrent modification of Id
-			msg := *mesg
-			msg.Id = req.Id
-			h.WriteReplyMsg(w, &msg)
-			return
+				// we need this copy against concurrent modification of Id
+				msg := *mesg
+				msg.Id = req.Id
+				h.WriteReplyMsg(w, &msg)
+				return
+			}
 		}
 	}
-
 	// Check blocklist
+	var blacklisted bool = false
+
 	if IPQuery > 0 {
-		exists := BlockCache.Exists(Q.Qname)
-		if exists {
+		blacklisted = BlockCache.Exists(Q.Qname)
+
+		if grimdActive && blacklisted {
 			m := new(dns.Msg)
 			m.SetReply(req)
 
@@ -155,7 +181,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			go QuestionCache.Add(NewEntry)
 
 			// cache the block
-			err := h.cache.Set(key, m)
+			err := h.cache.Set(key, m, true)
 			if err != nil {
 				log.Printf("Set %s block cache failed: %s\n", Q.String(), err.Error())
 			}
@@ -178,7 +204,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		dns.HandleFailed(w, req)
 
 		// cache the failure, too!
-		if err = h.negCache.Set(key, nil); err != nil {
+		if err = h.negCache.Set(key, nil, false); err != nil {
 			log.Printf("set %s negative cache failed: %v\n", Q.String(), err)
 		}
 		return
@@ -191,7 +217,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			dns.HandleFailed(w, req)
 
 			// cache the failure, too!
-			if err = h.negCache.Set(key, nil); err != nil {
+			if err = h.negCache.Set(key, nil, false); err != nil {
 				log.Printf("set %s negative cache failed: %v\n", Q.String(), err)
 			}
 			return
@@ -201,12 +227,18 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	h.WriteReplyMsg(w, mesg)
 
 	if IPQuery > 0 && len(mesg.Answer) > 0 {
-		err = h.cache.Set(key, mesg)
-		if err != nil {
-			log.Printf("set %s cache failed: %s\n", Q.String(), err.Error())
-		}
-		if Config.LogLevel > 0 {
-			log.Printf("insert %s into cache\n", Q.String())
+		if !grimdActive && blacklisted {
+			if Config.LogLevel > 0 {
+				log.Printf("%s is blacklisted and grimd not active: not caching\n", Q.String())
+			}
+		} else {
+			err = h.cache.Set(key, mesg, false)
+			if err != nil {
+				log.Printf("set %s cache failed: %s\n", Q.String(), err.Error())
+			}
+			if Config.LogLevel > 0 {
+				log.Printf("insert %s into cache\n", Q.String())
+			}
 		}
 	}
 }

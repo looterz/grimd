@@ -49,14 +49,15 @@ func (e SerializerError) Error() string {
 
 // Mesg represents a cache entry
 type Mesg struct {
-	Msg    *dns.Msg
-	Expire time.Time
+	Msg     *dns.Msg
+	Blocked bool
+	Expire  time.Time
 }
 
 // Cache interface
 type Cache interface {
-	Get(key string) (Msg *dns.Msg, err error)
-	Set(key string, Msg *dns.Msg) error
+	Get(key string) (Msg *dns.Msg, blocked bool, err error)
+	Set(key string, Msg *dns.Msg, blocked bool) error
 	Exists(key string) bool
 	Remove(key string)
 	Length() int
@@ -84,31 +85,31 @@ type MemoryQuestionCache struct {
 }
 
 // Get returns the entry for a key or an error
-func (c *MemoryCache) Get(key string) (*dns.Msg, error) {
+func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	c.mu.RLock()
 	mesg, ok := c.Backend[key]
 	c.mu.RUnlock()
 
 	if !ok {
-		return nil, KeyNotFound{key}
+		return nil, false, KeyNotFound{key}
 	}
 
 	if mesg.Expire.Before(time.Now()) {
 		c.Remove(key)
-		return nil, KeyExpired{key}
+		return nil, false, KeyExpired{key}
 	}
 
-	return mesg.Msg, nil
+	return mesg.Msg, mesg.Blocked, nil
 }
 
 // Set sets a keys value to a Mesg
-func (c *MemoryCache) Set(key string, msg *dns.Msg) error {
+func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
 	}
 
 	expire := time.Now().Add(c.Expire)
-	mesg := Mesg{msg, expire}
+	mesg := Mesg{msg, blocked, expire}
 	c.mu.Lock()
 	c.Backend[key] = mesg
 	c.mu.Unlock()
