@@ -85,7 +85,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	var grimdActive = grimdActivation.query()
-	if strings.Contains(Q.Qname, Config.ToggleName) {
+	if len(Config.ToggleName) >0 && strings.Contains(Q.Qname, Config.ToggleName) {
 		if Config.LogLevel > 0 {
 			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
 		}
