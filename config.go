@@ -11,8 +11,11 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// Version returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var Version = "1.0.2"
+// BuildVersion returns the build version of grimd, this should be incremented every new release
+var BuildVersion = "1.0.4"
+
+// ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
+var ConfigVersion = "1.0.2"
 
 type config struct {
 	Version           string
@@ -125,14 +128,14 @@ func LoadConfig(path string) error {
 		return fmt.Errorf("could not load config: %s", err)
 	}
 
-	if Config.Version != Version {
+	if Config.Version != ConfigVersion {
 		if Config.Version == "" {
 			Config.Version = "none"
 		}
 
-		log.Printf("warning, grimd.toml is out of date!\nconfig v%s\ngrimd v%s\nplease update your config\n", Config.Version, Version)
+		log.Printf("warning, grimd.toml is out of date!\nconfig v%s\ngrimd config v%s\ngrimd v%s\nplease update your config\n", Config.Version, ConfigVersion, BuildVersion)
 	} else {
-		log.Printf("grimd v%s\n", Version)
+		log.Printf("grimd v%s\n", BuildVersion)
 	}
 
 	return nil
@@ -145,7 +148,7 @@ func generateConfig(path string) error {
 	}
 	defer output.Close()
 
-	r := strings.NewReader(fmt.Sprintf(defaultConfig, Version))
+	r := strings.NewReader(fmt.Sprintf(defaultConfig, ConfigVersion))
 	if _, err := io.Copy(output, r); err != nil {
 		return fmt.Errorf("could not copy default config: %s", err)
 	}
