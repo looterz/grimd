@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-contrib/cors.v1"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 // StartAPIServer launches the API server
@@ -15,12 +16,7 @@ func StartAPIServer() error {
 	}
 
 	router := gin.Default()
-
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, PUT")
-		c.Next()
-	})
+	router.Use(cors.Default())
 
 	router.GET("/blockcache", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length(), "items": BlockCache.Backend})
