@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -86,6 +87,8 @@ type MemoryQuestionCache struct {
 
 // Get returns the entry for a key or an error
 func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
+	key = strings.ToLower(key)
+
 	c.mu.RLock()
 	mesg, ok := c.Backend[key]
 	c.mu.RUnlock()
@@ -104,6 +107,8 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 
 // Set sets a keys value to a Mesg
 func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
+	key = strings.ToLower(key)
+
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
 	}
@@ -119,6 +124,8 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 
 // Remove removes an entry from the cache
 func (c *MemoryCache) Remove(key string) {
+	key = strings.ToLower(key)
+
 	c.mu.Lock()
 	delete(c.Backend, key)
 	c.mu.Unlock()
@@ -126,6 +133,8 @@ func (c *MemoryCache) Remove(key string) {
 
 // Exists returns whether or not a key exists in the cache
 func (c *MemoryCache) Exists(key string) bool {
+	key = strings.ToLower(key)
+
 	c.mu.RLock()
 	_, ok := c.Backend[key]
 	c.mu.RUnlock()
@@ -158,6 +167,8 @@ func KeyGen(q Question) string {
 
 // Get returns the entry for a key or an error
 func (c *MemoryBlockCache) Get(key string) (bool, error) {
+	key = strings.ToLower(key)
+
 	c.mu.RLock()
 	val, ok := c.Backend[key]
 	c.mu.RUnlock()
@@ -171,6 +182,8 @@ func (c *MemoryBlockCache) Get(key string) (bool, error) {
 
 // Remove removes an entry from the cache
 func (c *MemoryBlockCache) Remove(key string) {
+	key = strings.ToLower(key)
+
 	c.mu.Lock()
 	delete(c.Backend, key)
 	c.mu.Unlock()
@@ -178,6 +191,8 @@ func (c *MemoryBlockCache) Remove(key string) {
 
 // Set sets a value in the BlockCache
 func (c *MemoryBlockCache) Set(key string, value bool) error {
+	key = strings.ToLower(key)
+
 	c.mu.Lock()
 	c.Backend[key] = value
 	c.mu.Unlock()
@@ -187,6 +202,8 @@ func (c *MemoryBlockCache) Set(key string, value bool) error {
 
 // Exists returns whether or not a key exists in the cache
 func (c *MemoryBlockCache) Exists(key string) bool {
+	key = strings.ToLower(key)
+
 	c.mu.RLock()
 	_, ok := c.Backend[key]
 	c.mu.RUnlock()

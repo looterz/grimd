@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -52,6 +53,10 @@ func TestBlockCache(t *testing.T) {
 
 	if exists := cache.Exists(testDomain); !exists {
 		t.Error(testDomain, "didnt exist in block cache")
+	}
+
+	if exists := cache.Exists(strings.ToUpper(testDomain)); !exists {
+		t.Error(strings.ToUpper(testDomain), "didnt exist in block cache")
 	}
 
 	if _, err := cache.Get(testDomain); err != nil {
