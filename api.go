@@ -82,11 +82,10 @@ func StartAPIServer() error {
 	})
 
 	router.OPTIONS("/application/active", func(c *gin.Context) {
-	    c.AbortWithStatus(http.StatusOK)
-    })
+		c.AbortWithStatus(http.StatusOK)
+	})
 
 	router.GET("/application/active", func(c *gin.Context) {
-		QuestionCache.Clear()
 		c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
 	})
 
