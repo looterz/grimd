@@ -99,7 +99,7 @@ env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 # Web API
 A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
 
-![reaper-example](http://i.imgur.com/UW1uvOC.png)
+![reaper-example](http://i.imgur.com/oXLtqSz.png)
 
 # Speed
 Incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, while answered queries are cached allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
