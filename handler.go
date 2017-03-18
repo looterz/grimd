@@ -115,7 +115,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 				if Config.LogLevel > 1 {
 					log.Printf("%s hit negative cache\n", Q.String())
 				}
-				dns.HandleFailed(w, req)
+				h.HandleFailed(w, req)
 				return
 			}
 		} else {
