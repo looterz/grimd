@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"strconv"
 
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-contrib/cors.v1"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 // StartAPIServer launches the API server
@@ -14,11 +16,7 @@ func StartAPIServer() error {
 	}
 
 	router := gin.Default()
-
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Next()
-	})
+	router.Use(cors.Default())
 
 	router.GET("/blockcache", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length(), "items": BlockCache.Backend})
@@ -77,6 +75,50 @@ func StartAPIServer() error {
 		QuestionCache.mu.RUnlock()
 
 		c.IndentedJSON(http.StatusOK, filteredCache)
+	})
+
+	router.OPTIONS("/application/active", func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusOK)
+	})
+
+	router.GET("/application/active", func(c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
+	})
+
+	// Handle the setting of active state.
+	// Possible values for state:
+	// On
+	// Off
+	// Snooze: off for `timeout` seconds; timeout defaults to 300
+	router.PUT("/application/active", func(c *gin.Context) {
+		active := c.Query("state")
+		version := c.Query("v")
+		if version != "1" {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Illegal value for 'version'"})
+		} else {
+			switch active {
+			case "On":
+				grimdActivation.set(true)
+				c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
+			case "Off":
+				grimdActivation.set(false)
+				c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
+			case "Snooze":
+				timeout_string := c.DefaultQuery("timeout", "300")
+				timeout, err := strconv.ParseUint(timeout_string, 0, 0)
+				if err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Illegal value for 'timeout'"})
+				} else {
+					grimdActivation.toggleOff(uint(timeout))
+					c.IndentedJSON(http.StatusOK, gin.H{
+						"active":  grimdActive,
+						"timeout": timeout,
+					})
+				}
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Illegal value for 'state'"})
+			}
+		}
 	})
 
 	if err := router.Run(Config.API); err != nil {

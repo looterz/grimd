@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,17 +23,17 @@ func TestCache(t *testing.T) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
-	if err := cache.Set(testDomain, m); err != nil {
+	if err := cache.Set(testDomain, m, true); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := cache.Get(testDomain); err != nil && err.Error() != fmt.Sprintf("%s expired", testDomain) {
+	if _, _, err := cache.Get(testDomain); err != nil && err.Error() != fmt.Sprintf("%s expired", testDomain) {
 		t.Error(err)
 	}
 
 	cache.Remove(testDomain)
 
-	if _, err := cache.Get(testDomain); err == nil {
+	if _, _, err := cache.Get(testDomain); err == nil {
 		t.Error("cache entry still existed after remove")
 	}
 }
@@ -52,6 +53,10 @@ func TestBlockCache(t *testing.T) {
 
 	if exists := cache.Exists(testDomain); !exists {
 		t.Error(testDomain, "didnt exist in block cache")
+	}
+
+	if exists := cache.Exists(strings.ToUpper(testDomain)); !exists {
+		t.Error(strings.ToUpper(testDomain), "didnt exist in block cache")
 	}
 
 	if _, err := cache.Get(testDomain); err != nil {

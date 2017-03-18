@@ -17,6 +17,9 @@ You can also download one of the [releases](https://github.com/looterz/grimd/rel
 # Configuration
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
+# version this config was generated from
+version = "1.0.2"
+
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
 "http://mirror1.malwaredomains.com/files/justdomains",
@@ -78,6 +81,13 @@ whitelist = [
 	"getsentry.com",
 	"www.getsentry.com"
 ]
+
+# When this string is queried, toggle grimd on and off
+togglename = ""
+
+# If not zero, the delay in seconds before grimd automaticall reactivates after
+# having been turned off.
+reactivationdelay = 300
 ```
 
 # Building
@@ -89,10 +99,10 @@ env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 # Web API
 A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
 
-![reaper-example](http://i.imgur.com/UW1uvOC.png)
+![reaper-example](http://i.imgur.com/oXLtqSz.png)
 
 # Speed
-Incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
+Incoming requests spawn a goroutine and are served concurrently, and the block cache resides in-memory to allow for rapid lookups, while answered queries are cached allowing grimd to serve thousands of queries at once while maintaining a memory footprint of under 15mb for 100,000 blocked domains!
 
 # Daemonize
 You can find examples of different daemon scripts for grimd on the [wiki](https://github.com/looterz/grimd/wiki/Daemon-Scripts).
