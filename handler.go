@@ -201,7 +201,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 
 	if err != nil {
 		log.Printf("resolve query error %s\n", err)
-		dns.HandleFailed(w, req)
+		h.HandleFailed(w, req)
 
 		// cache the failure, too!
 		if err = h.negCache.Set(key, nil, false); err != nil {
@@ -214,7 +214,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		mesg, err = h.resolver.Lookup("tcp", req)
 		if err != nil {
 			log.Printf("resolve tcp query error %s\n", err)
-			dns.HandleFailed(w, req)
+			h.HandleFailed(w, req)
 
 			// cache the failure, too!
 			if err = h.negCache.Set(key, nil, false); err != nil {
@@ -251,6 +251,12 @@ func (h *DNSHandler) DoTCP(w dns.ResponseWriter, req *dns.Msg) {
 // DoUDP begins a udp query
 func (h *DNSHandler) DoUDP(w dns.ResponseWriter, req *dns.Msg) {
 	go h.do("udp", w, req)
+}
+
+func (h *DNSHandler) HandleFailed(w dns.ResponseWriter, message *dns.Msg) {
+	m := new(dns.Msg)
+	m.SetRcode(message, RcodeServerFailure)
+	h.WriteReplyMsg(w, m)
 }
 
 func (h *DNSHandler) WriteReplyMsg(w dns.ResponseWriter, message *dns.Msg) {
