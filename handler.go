@@ -255,7 +255,7 @@ func (h *DNSHandler) DoUDP(w dns.ResponseWriter, req *dns.Msg) {
 
 func (h *DNSHandler) HandleFailed(w dns.ResponseWriter, message *dns.Msg) {
 	m := new(dns.Msg)
-	m.SetRcode(message, RcodeServerFailure)
+	m.SetRcode(message, dns.RcodeServerFailure)
 	h.WriteReplyMsg(w, m)
 }
 
