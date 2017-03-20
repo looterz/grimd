@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"gopkg.in/gin-contrib/cors.v1"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 // StartAPIServer launches the API server
