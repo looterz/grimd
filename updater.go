@@ -19,7 +19,7 @@ var whitelist = make(map[string]bool)
 // Update downloads all of the blocklists and imports them into the database
 func Update() error {
 	if _, err := os.Stat("sources"); os.IsNotExist(err) {
-		if err := os.Mkdir("sources", 0600); err != nil {
+		if err := os.Mkdir("sources", 0700); err != nil {
 			return fmt.Errorf("error creating sources directory: %s", err)
 		}
 	}
