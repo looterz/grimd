@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
+	"github.com/ryanuber/go-glob"
 )
 
 // KeyNotFound type
@@ -72,9 +73,21 @@ type MemoryCache struct {
 	mu       sync.RWMutex
 }
 
+const (
+	BlockCacheEntryString = iota
+	BlockCacheEntryRegexp
+	BlockCacheEntryGlob
+)
+
+type BlockCacheSpecial struct {
+	Data string
+	Type int
+}
+
 // MemoryBlockCache type
 type MemoryBlockCache struct {
 	Backend map[string]bool
+	Special []BlockCacheSpecial
 	mu      sync.RWMutex
 }
 
@@ -192,9 +205,16 @@ func (c *MemoryBlockCache) Remove(key string) {
 // Set sets a value in the BlockCache
 func (c *MemoryBlockCache) Set(key string, value bool) error {
 	key = strings.ToLower(key)
+	const globChars = "?*"
 
 	c.mu.Lock()
-	c.Backend[key] = value
+	if strings.ContainsAny(key, globChars) {
+		c.Special = append(
+			c.Special,
+			BlockCacheSpecial{Data: key, Type: BlockCacheEntryGlob})
+	} else {
+		c.Backend[key] = value
+	}
 	c.mu.Unlock()
 
 	return nil
@@ -206,6 +226,17 @@ func (c *MemoryBlockCache) Exists(key string) bool {
 
 	c.mu.RLock()
 	_, ok := c.Backend[key]
+	if !ok {
+		for _, element := range c.Special {
+			if element.Type == BlockCacheEntryRegexp {
+				panic("Unsupported")
+			} else if element.Type == BlockCacheEntryGlob {
+				if glob.Glob(element.Data, key) {
+					ok = true
+				}
+			}
+		}
+	}
 	c.mu.RUnlock()
 	return ok
 }
