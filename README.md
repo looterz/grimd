@@ -91,7 +91,7 @@ reactivationdelay = 300
 ```
 
 # Building
-Requires golang 1.6 or higher, you build grimd like any other golang application, for example to build for linux x64
+Requires golang 1.7 or higher, you build grimd like any other golang application, for example to build for linux x64
 ```shell
 env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
