@@ -67,3 +67,36 @@ func TestBlockCache(t *testing.T) {
 		t.Error("fuzz existed in block cache")
 	}
 }
+
+func TestBlockCacheGlob(t *testing.T) {
+	const (
+		globDomain1 = "*.google.com"
+		globDomain2 = "ww?.google.com"
+		testDomain1 = "www.google.com"
+		testDomain2 = "wwx.google.com"
+		testDomain3 = "www.google.it"
+	)
+
+	cache := &MemoryBlockCache{
+		Backend: make(map[string]bool),
+	}
+
+	if err := cache.Set(globDomain1, true); err != nil {
+		t.Error(err)
+	}
+	if err := cache.Set(globDomain2, true); err != nil {
+		t.Error(err)
+	}
+
+	if exists := cache.Exists(testDomain1); !exists {
+		t.Error(testDomain1, "didnt exist in block cache")
+	}
+
+	if exists := cache.Exists(testDomain2); !exists {
+		t.Error(testDomain2, "didnt exist in block cache")
+	}
+
+	if exists := cache.Exists(testDomain3); exists {
+		t.Error(testDomain3, "did exist in block cache")
+	}
+}
