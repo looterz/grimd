@@ -110,7 +110,7 @@ git submodule update
 
 Embed the frontend panel content into a rice-box.
 ```shell
-rice go-embed
+rice embed-go
 ```
 
 Then you can build the grimd binary as usual, for linux_amd64 use the following.
