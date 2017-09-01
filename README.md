@@ -121,7 +121,7 @@ env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 # Frontend
 #### [reaper](https://github.com/looterz/reaper) is the default web frontend.
 
-A frontend panel displaying the query log and some statistics is enabled by default. You can disable this feature by setting `webpanel = false` in `grimd.toml`. By default this panel is hosted on `http://127.0.0.1:8080/frontend`.
+A frontend panel displaying the query log and some statistics is enabled by default. You can disable this feature by setting `webpanel = false` in `grimd.toml`. By default this panel is hosted on `http://127.0.0.1:8080/frontend` secured with basic authentication. The default username is `admin` and the default password is a random string defined in `grimd.toml`.
 
 ![reaper-example](http://i.imgur.com/oXLtqSz.png)
 
