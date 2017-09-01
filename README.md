@@ -103,7 +103,7 @@ reactivationdelay = 300
 # Building
 Requires golang 1.7 or higher and the [go-rice](https://github.com/GeertJohan/go.rice) tool.
 
-The default frontend for grimd is [reaper]() and is a git submodule of grimd, ensure its up to date using the following command.
+The frontend for grimd is a git submodule, ensure its up to date using the following command.
 ```shell
 git submodule update
 ```
