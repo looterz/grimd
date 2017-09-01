@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
 
 // BuildVersion returns the build version of grimd, this should be incremented every new release
-var BuildVersion = "1.0.5"
+var BuildVersion = "1.0.6"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.2"
+var ConfigVersion = "1.0.3"
 
 type config struct {
 	Version           string
@@ -38,6 +40,9 @@ type config struct {
 	Whitelist         []string
 	ToggleName        string
 	ReactivationDelay uint
+	WebPanel          bool
+	WebUser           string
+	WebPass           string
 }
 
 var defaultConfig = `# version this config was generated from
@@ -72,6 +77,13 @@ bind = "0.0.0.0:53"
 # address to bind to for the API server
 api = "127.0.0.1:8080"
 
+# enable or disable the web server for the frontend panel and api
+webpanel = true
+
+# users authorized to access the web server
+webuser = "admin"
+webpass = "password"
+
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
 
@@ -102,7 +114,8 @@ blocklist = []
 # manual whitelist entries
 whitelist = [
 	"getsentry.com",
-	"www.getsentry.com"
+	"www.getsentry.com",
+	"pastebin.com"
 ]
 
 # When this string is queried, toggle grimd on and off
@@ -148,7 +161,9 @@ func generateConfig(path string) error {
 	}
 	defer output.Close()
 
-	r := strings.NewReader(fmt.Sprintf(defaultConfig, ConfigVersion))
+	var RandomPassword = RandStringBytesMaskImprSrc(32)
+
+	r := strings.NewReader(fmt.Sprintf(defaultConfig, ConfigVersion, RandomPassword))
 	if _, err := io.Copy(output, r); err != nil {
 		return fmt.Errorf("could not copy default config: %s", err)
 	}
@@ -158,4 +173,25 @@ func generateConfig(path string) error {
 	}
 
 	return nil
+}
+
+var src = rand.NewSource(time.Now().UnixNano())
+
+// RandStringBytesMaskImprSrc by icza
+func RandStringBytesMaskImprSrc(n int) string {
+	b := make([]byte, n)
+
+	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return string(b)
 }

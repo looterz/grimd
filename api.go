@@ -1,32 +1,42 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
-	"gopkg.in/gin-contrib/cors.v1"
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/gin-gonic/gin"
 )
 
-// StartAPIServer launches the API server
-func StartAPIServer() error {
+// StartWebServer launches the web server which serves the frontend and API
+func StartWebServer() error {
 	if Config.LogLevel == 0 {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.Default()
-	router.Use(cors.Default())
 
-	router.GET("/blockcache", func(c *gin.Context) {
+	// Secure the web server with basic authorization
+	authorized := router.Group("/", gin.BasicAuth(gin.Accounts{Config.WebUser: Config.WebPass}))
+
+	// Frontend assets are embedded into the binary during the build process using go-rice
+	// TODO: handle panic from rice
+	box := rice.MustFindBox("frontend").HTTPBox()
+
+	authorized.StaticFS("/frontend", box)
+
+	// TODO: Setup websocket hub for broadcasting events
+
+	// API requests
+	authorized.GET("/api/blockcache", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length(), "items": BlockCache.Backend})
 	})
 
-	router.GET("/blockcache/exists/:key", func(c *gin.Context) {
+	authorized.GET("/api/blockcache/exists/:key", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"exists": BlockCache.Exists(c.Param("key"))})
 	})
 
-	router.GET("/blockcache/get/:key", func(c *gin.Context) {
+	authorized.GET("/api/blockcache/get/:key", func(c *gin.Context) {
 		if ok, _ := BlockCache.Get(c.Param("key")); !ok {
 			c.IndentedJSON(http.StatusOK, gin.H{"error": c.Param("key") + " not found"})
 		} else {
@@ -34,36 +44,36 @@ func StartAPIServer() error {
 		}
 	})
 
-	router.GET("/blockcache/length", func(c *gin.Context) {
+	authorized.GET("/api/blockcache/length", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length()})
 	})
 
-	router.GET("/blockcache/remove/:key", func(c *gin.Context) {
+	authorized.GET("/api/blockcache/remove/:key", func(c *gin.Context) {
 		// Removes from BlockCache only. If the domain has already been queried and placed into MemoryCache, will need to wait until item is expired.
 		BlockCache.Remove(c.Param("key"))
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
-	router.GET("/blockcache/set/:key", func(c *gin.Context) {
+	authorized.GET("/api/blockcache/set/:key", func(c *gin.Context) {
 		// MemoryBlockCache Set() always returns nil, so ignoring response.
 		_ = BlockCache.Set(c.Param("key"), true)
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
-	router.GET("/questioncache", func(c *gin.Context) {
+	authorized.GET("/api/questioncache", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length(), "items": QuestionCache.Backend})
 	})
 
-	router.GET("/questioncache/length", func(c *gin.Context) {
+	authorized.GET("/api/questioncache/length", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length()})
 	})
 
-	router.GET("/questioncache/clear", func(c *gin.Context) {
+	authorized.GET("/api/questioncache/clear", func(c *gin.Context) {
 		QuestionCache.Clear()
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
-	router.GET("/questioncache/client/:client", func(c *gin.Context) {
+	authorized.GET("/api/questioncache/client/:client", func(c *gin.Context) {
 		var filteredCache []QuestionCacheEntry
 
 		QuestionCache.mu.RLock()
@@ -77,11 +87,11 @@ func StartAPIServer() error {
 		c.IndentedJSON(http.StatusOK, filteredCache)
 	})
 
-	router.OPTIONS("/application/active", func(c *gin.Context) {
+	authorized.OPTIONS("/api/application/active", func(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
 	})
 
-	router.GET("/application/active", func(c *gin.Context) {
+	authorized.GET("/api/application/active", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
 	})
 
@@ -90,7 +100,7 @@ func StartAPIServer() error {
 	// On
 	// Off
 	// Snooze: off for `timeout` seconds; timeout defaults to 300
-	router.PUT("/application/active", func(c *gin.Context) {
+	authorized.PUT("/api/application/active", func(c *gin.Context) {
 		active := c.Query("state")
 		version := c.Query("v")
 		if version != "1" {
@@ -104,8 +114,8 @@ func StartAPIServer() error {
 				grimdActivation.set(false)
 				c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
 			case "Snooze":
-				timeout_string := c.DefaultQuery("timeout", "300")
-				timeout, err := strconv.ParseUint(timeout_string, 0, 0)
+				timeoutString := c.DefaultQuery("timeout", "300")
+				timeout, err := strconv.ParseUint(timeoutString, 0, 0)
 				if err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{"error": "Illegal value for 'timeout'"})
 				} else {
@@ -121,11 +131,10 @@ func StartAPIServer() error {
 		}
 	})
 
+	// Start web server
 	if err := router.Run(Config.API); err != nil {
 		return err
 	}
-
-	log.Println("API server listening on", Config.API)
 
 	return nil
 }

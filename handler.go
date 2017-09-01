@@ -85,7 +85,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	var grimdActive = grimdActivation.query()
-	if len(Config.ToggleName) >0 && strings.Contains(Q.Qname, Config.ToggleName) {
+	if len(Config.ToggleName) > 0 && strings.Contains(Q.Qname, Config.ToggleName) {
 		if Config.LogLevel > 0 {
 			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
 		}
@@ -137,7 +137,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		}
 	}
 	// Check blocklist
-	var blacklisted bool = false
+	var blacklisted = false
 
 	if IPQuery > 0 {
 		blacklisted = BlockCache.Exists(Q.Qname)
@@ -253,12 +253,14 @@ func (h *DNSHandler) DoUDP(w dns.ResponseWriter, req *dns.Msg) {
 	go h.do("udp", w, req)
 }
 
+// HandleFailed handles a failed dns query
 func (h *DNSHandler) HandleFailed(w dns.ResponseWriter, message *dns.Msg) {
 	m := new(dns.Msg)
 	m.SetRcode(message, dns.RcodeServerFailure)
 	h.WriteReplyMsg(w, m)
 }
 
+// WriteReplyMsg handles a reply to a dns query
 func (h *DNSHandler) WriteReplyMsg(w dns.ResponseWriter, message *dns.Msg) {
 	defer func() {
 		if r := recover(); r != nil {

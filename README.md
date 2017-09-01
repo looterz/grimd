@@ -18,7 +18,7 @@ You can also download one of the [releases](https://github.com/looterz/grimd/rel
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.2"
+version = "1.0.3"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -48,6 +48,15 @@ bind = "0.0.0.0:53"
 
 # address to bind to for the API server
 api = "127.0.0.1:8080"
+
+# enable or disable the web server for the frontend panel and api
+webpanel = true
+
+# webserver username
+webuser = "admin"
+
+# webserver password, random string on config generation
+webpass = ""
 
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
@@ -79,7 +88,8 @@ blocklist = []
 # manual whitelist entries
 whitelist = [
 	"getsentry.com",
-	"www.getsentry.com"
+	"www.getsentry.com",
+	"pastebin.com"
 ]
 
 # When this string is queried, toggle grimd on and off
@@ -91,13 +101,27 @@ reactivationdelay = 300
 ```
 
 # Building
-Requires golang 1.7 or higher, you build grimd like any other golang application, for example to build for linux x64
+Requires golang 1.7 or higher and the [go-rice](https://github.com/GeertJohan/go.rice) tool.
+
+The default frontend for grimd is [reaper]() and is a git submodule of grimd, ensure its up to date using the following command.
+```shell
+git submodule update
+```
+
+Embed the frontend panel content into a rice-box.
+```shell
+rice go-embed
+```
+
+Then you can build the grimd binary as usual, for linux_amd64 use the following.
 ```shell
 env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
 
-# Web API
-A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
+# Frontend
+#### [reaper](https://github.com/looterz/reaper) is the default web frontend.
+
+A frontend panel displaying the query log and some statistics is enabled by default. You can disable this feature by setting `webpanel = false` in `grimd.toml`. By default this panel is hosted on `http://127.0.0.1:8080/frontend`.
 
 ![reaper-example](http://i.imgur.com/oXLtqSz.png)
 

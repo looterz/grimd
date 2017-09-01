@@ -42,9 +42,9 @@ func (s *Server) Run() {
 }
 
 func (s *Server) start(ds *dns.Server) {
-	log.Printf("start %s listener on %s\n", ds.Net, s.host)
+	log.Printf("starting dns %s listener on %s\n", ds.Net, s.host)
 
 	if err := ds.ListenAndServe(); err != nil {
-		log.Printf("start %s listener on %s failed: %s\n", ds.Net, s.host, err.Error())
+		log.Printf("failed to start dns %s listener on %s: %s\n", ds.Net, s.host, err.Error())
 	}
 }

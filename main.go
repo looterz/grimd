@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"runtime"
@@ -13,7 +14,7 @@ var (
 	configPath      string
 	forceUpdate     bool
 	grimdActive     bool
-	grimdActivation ActivationHandler
+	grimdActivation activationHandler
 
 	// BlockCache contains all blocked domains
 	BlockCache = &MemoryBlockCache{Backend: make(map[string]bool)}
@@ -23,7 +24,6 @@ var (
 )
 
 func main() {
-
 	flag.Parse()
 
 	if err := LoadConfig(configPath); err != nil {
@@ -53,8 +53,8 @@ func main() {
 	}()
 
 	grimdActive = true
-	quit_activation := make(chan bool)
-	go grimdActivation.loop(quit_activation)
+	quitActivation := make(chan bool)
+	go grimdActivation.loop(quitActivation)
 
 	server := &Server{
 		host:     Config.Bind,
@@ -64,8 +64,12 @@ func main() {
 
 	server.Run()
 
-	if err := StartAPIServer(); err != nil {
-		log.Fatal(err)
+	if config.WebPanel {
+		if err := StartWebServer(); err != nil {
+			log.Fatal(err)
+		}
+
+		log.Printf("API server listening on http://%s/api\nFrontend server located at http://%s/frontend\n", Config.API, Config.API)
 	}
 
 	sig := make(chan os.Signal)
@@ -76,7 +80,7 @@ forever:
 		select {
 		case <-sig:
 			log.Printf("signal received, stopping\n")
-			quit_activation <- true
+			quitActivation <- true
 			break forever
 		}
 	}
@@ -86,5 +90,6 @@ func init() {
 	flag.StringVar(&configPath, "config", "grimd.toml", "location of the config file, if not found it will be generated (default grimd.toml)")
 	flag.BoolVar(&forceUpdate, "update", false, "force an update of the blocklist database")
 
+	rand.Seed(time.Now().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }

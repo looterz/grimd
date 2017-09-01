@@ -139,6 +139,8 @@ func parseHostFile(file *os.File) error {
 				line = fields[0]
 			}
 
+			//TODO: implement glob string matching for the whitelist so grimd will support wildcard rules like whitelisting *.google.com
+			//TODO: inform the user of any rules that were filtered out by the whitelist
 			if !BlockCache.Exists(line) && !whitelist[line] {
 				BlockCache.Set(line, true)
 			}
