@@ -82,7 +82,9 @@ webpanel = true
 
 # users authorized to access the web server
 webuser = "admin"
-webpass = "password"
+
+# webserver password
+webpass = "%s"
 
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
@@ -174,6 +176,13 @@ func generateConfig(path string) error {
 
 	return nil
 }
+
+const (
+	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
 
 var src = rand.NewSource(time.Now().UnixNano())
 

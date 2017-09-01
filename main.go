@@ -64,7 +64,7 @@ func main() {
 
 	server.Run()
 
-	if config.WebPanel {
+	if Config.WebPanel {
 		if err := StartWebServer(); err != nil {
 			log.Fatal(err)
 		}
