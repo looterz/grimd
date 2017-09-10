@@ -18,9 +18,12 @@ You can also download one of the [releases](https://github.com/looterz/grimd/rel
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.2"
+version = "1.0.4"
 
 # list of sources to pull blocklists from, stores them in ./sources
+
+useblocklist = 0
+
 sources = [
 "http://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -29,16 +32,17 @@ sources = [
 "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
 "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
 "http://hosts-file.net/ad_servers.txt",
-"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+"http://moodle.ngtech.co.il/ngtech-ads-hosts-only.txt"
 ]
 
 # list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
 sourcedirs = [
-"sources"
+ "/var/grim/sources"
 ]
 
 # location of the log file
-log = "grimd.log"
+log = "/var/log/grimd.log"
 
 # what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
 loglevel = 0
@@ -47,16 +51,16 @@ loglevel = 0
 bind = "0.0.0.0:53"
 
 # address to bind to for the API server
-api = "127.0.0.1:8080"
+api = "127.0.0.1:28080"
 
 # ipv4 address to forward blocked queries to
-nullroute = "0.0.0.0"
+nullroute = "213.151.33.115"
 
 # ipv6 address to forward blocked queries to
-nullroutev6 = "0:0:0:0:0:0:0:0"
+nullroutev6 = "2a01:6500:1:1000::114:100"
 
 # nameservers to forward queries to
-nameservers = ["8.8.8.8:53", "8.8.4.4:53"]
+nameservers = ["192.168.89.53:53","8.8.8.8:53", "8.8.4.4:53"]
 
 # concurrency interval for lookups in miliseconds
 interval = 200
@@ -78,8 +82,8 @@ blocklist = []
 
 # manual whitelist entries
 whitelist = [
-	"getsentry.com",
-	"www.getsentry.com"
+	"ngtech.co.il",
+	"www.ngtech.co.il"
 ]
 
 # When this string is queried, toggle grimd on and off
@@ -88,6 +92,13 @@ togglename = ""
 # If not zero, the delay in seconds before grimd automaticall reactivates after
 # having been turned off.
 reactivationdelay = 300
+
+# Drbl related settings
+usedrbl = 1
+drblpeersfilename = "/etc/peersfile.yaml"
+drblblockweight = 128
+drbltimeout = 30
+drbldebug = 0
 ```
 
 # Building

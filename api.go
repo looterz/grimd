@@ -1,12 +1,11 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-contrib/cors.v1"
 	"log"
 	"net/http"
 	"strconv"
-
-	"gopkg.in/gin-contrib/cors.v1"
-	"github.com/gin-gonic/gin"
 )
 
 // StartAPIServer launches the API server

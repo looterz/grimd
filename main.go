@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
+	"github.com/elico/drbl-peer"
 	"log"
 	"os"
 	"os/signal"
 	"time"
-	"github.com/elico/drbl-peer"
 )
 
 var (
@@ -34,8 +34,8 @@ func main() {
 
 	QuestionCache.Maxcount = Config.QuestionCacheCap
 	if Config.UseDrbl > 0 {
-	//drblPeers, _ = drblpeer.NewPeerListFromFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
-	drblPeers, _ = drblpeer.NewPeerListFromYamlFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
+		//drblPeers, _ = drblpeer.NewPeerListFromFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
+		drblPeers, _ = drblpeer.NewPeerListFromYamlFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
 		if Config.DrblDebug > 0 {
 			log.Println("Drbl Debug is ON")
 			drblPeers.Debug = true

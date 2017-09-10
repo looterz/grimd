@@ -1,0 +1,19 @@
+[Unit]
+Description=grimd dns proxy
+Documentation=https://github.com/elico/grimd
+After=network.target
+
+[Service]
+User=root
+ExecStartPre=-/usr/bin/mkdir -p /var/grimd
+ExecStartPre=-/usr/bin/mkdir -p /var/grimd/sources
+ExecStartPre=-/usr/bin/mkdir -p /var/log/grimd
+#WorkingDirectory=/var/grimd
+LimitNOFILE=4096
+PIDFile=/var/run/grimd/grimd.pid
+ExecStart=/usr/bin/grimd -update -config=/etc/grimd.conf
+Restart=always
+StartLimitInterval=30
+
+[Install]
+WantedBy=multi-user.target
