@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"runtime"
 	"time"
+	"github.com/elico/drbl-peer"
 )
 
 var (
@@ -22,6 +22,8 @@ var (
 	QuestionCache = &MemoryQuestionCache{Backend: make([]QuestionCacheEntry, 0), Maxcount: 1000}
 )
 
+var drblPeers *drblpeer.DrblPeers
+
 func main() {
 
 	flag.Parse()
@@ -31,7 +33,15 @@ func main() {
 	}
 
 	QuestionCache.Maxcount = Config.QuestionCacheCap
-
+	if Config.UseDrbl > 0 {
+	//drblPeers, _ = drblpeer.NewPeerListFromFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
+	drblPeers, _ = drblpeer.NewPeerListFromYamlFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
+		if Config.DrblDebug > 0 {
+			log.Println("Drbl Debug is ON")
+			drblPeers.Debug = true
+			log.Println("Drbl Debug is ON", drblPeers.Debug)
+		}
+	}
 	logFile, err := LoggerInit(Config.Log)
 	if err != nil {
 		log.Fatal(err)
@@ -85,6 +95,4 @@ forever:
 func init() {
 	flag.StringVar(&configPath, "config", "grimd.toml", "location of the config file, if not found it will be generated (default grimd.toml)")
 	flag.BoolVar(&forceUpdate, "update", false, "force an update of the blocklist database")
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
 }

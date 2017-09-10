@@ -85,7 +85,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	var grimdActive = grimdActivation.query()
-	if len(Config.ToggleName) >0 && strings.Contains(Q.Qname, Config.ToggleName) {
+	if len(Config.ToggleName) > 0 && strings.Contains(Q.Qname, Config.ToggleName) {
 		if Config.LogLevel > 0 {
 			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
 		}
@@ -138,11 +138,30 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 	// Check blocklist
 	var blacklisted bool = false
-
+	var drblblacklisted bool = false
 	if IPQuery > 0 {
-		blacklisted = BlockCache.Exists(Q.Qname)
+		if Config.UseBlockList > 0 {
+			blacklisted = BlockCache.Exists(Q.Qname)
+			if Config.LogLevel > 0 {
+				log.Println("Blocklist enabled and checked =>", Q.Qname, "The result is =>", blacklisted)
+			}
+		} else {
+			if Config.LogLevel > 0 {
+				log.Println("Blocklist is disabled for =>", Q.Qname, "The result is =>", blacklisted)
+			}
+		}
 
-		if grimdActive && blacklisted {
+		if Config.UseDrbl > 0 {
+			drblblacklisted = drblCheckHostname(Q.Qname)
+			if Config.LogLevel > 0 {
+				log.Println("DrblBlistCheck enabled and checked =>", Q.Qname, "The result is =>", drblblacklisted)
+			}
+		} else {
+			if Config.LogLevel > 0 {
+				log.Println("DrblBlistCheck is disabled for =>", Q.Qname, "The result is =>", drblblacklisted)
+			}
+		}
+		if grimdActive && (blacklisted || drblblacklisted) {
 			m := new(dns.Msg)
 			m.SetReply(req)
 

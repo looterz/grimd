@@ -15,7 +15,7 @@ import (
 var BuildVersion = "1.0.5"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.2"
+var ConfigVersion = "1.0.4"
 
 type config struct {
 	Version           string
@@ -34,14 +34,22 @@ type config struct {
 	Maxcount          int
 	QuestionCacheCap  int
 	TTL               uint32
+	UseBlockList      int
 	Blocklist         []string
 	Whitelist         []string
 	ToggleName        string
 	ReactivationDelay uint
+	UseDrbl           int
+	DrblPeersFilename string
+	DrblBlockWeight   int64
+	DrblTimeout       int
+	DrblDebug         int
 }
 
 var defaultConfig = `# version this config was generated from
 version = "%s"
+
+useblocklist = 1
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -52,7 +60,8 @@ sources = [
 "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
 "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
 "http://hosts-file.net/ad_servers.txt",
-"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+"http://moodle.ngtech.co.il/ngtech-ads-hosts-only.txt"
 ]
 
 # list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
@@ -61,7 +70,7 @@ sourcedirs = [
 ]
 
 # location of the log file
-log = "grimd.log"
+log = "/var/log/grimd.log"
 
 # what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
 loglevel = 0
@@ -111,6 +120,13 @@ togglename = ""
 # If not zero, the delay in seconds before grimd automaticall reactivates after
 # having been turned off.
 reactivationdelay = 300
+
+# Drbl related settings
+usedrbl = 0
+drblpeersfilename = "drblpeers.yaml"
+drblblockweight = 128
+drbltimeout = 30
+drbldebug = 0
 `
 
 // Config is the global configuration

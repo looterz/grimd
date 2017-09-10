@@ -31,11 +31,13 @@ func Update() error {
 	for _, entry := range Config.Blocklist {
 		BlockCache.Set(entry, true)
 	}
-
-	if err := fetchSources(); err != nil {
-		return fmt.Errorf("error fetching sources: %s", err)
+	if Config.UseBlockList > 0 {
+		if err := fetchSources(); err != nil {
+			return fmt.Errorf("error fetching sources: %s", err)
+		}
+	} else {
+		log.Printf("fetching blocked domains from remote locations was disabled..\n")
 	}
-
 	return nil
 }
 
