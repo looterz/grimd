@@ -95,7 +95,7 @@ reactivationdelay = 300
 
 # Drbl related settings
 usedrbl = 1
-drblpeersfilename = "/etc/peersfile.yaml"
+drblpeersfilename = "/etc/drblpeers.yaml"
 drblblockweight = 128
 drbltimeout = 30
 drbldebug = 0
