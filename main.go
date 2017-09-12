@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"time"
+	"strconv"
 )
 
 var (
@@ -33,8 +34,14 @@ func main() {
 	}
 
 	QuestionCache.Maxcount = Config.QuestionCacheCap
+
+	logFile, err := LoggerInit(Config.Log)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logFile.Close()
+
 	if Config.UseDrbl > 0 {
-		//drblPeers, _ = drblpeer.NewPeerListFromFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
 		drblPeers, _ = drblpeer.NewPeerListFromYamlFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
 		if Config.DrblDebug > 0 {
 			log.Println("Drbl Debug is ON")
@@ -42,11 +49,11 @@ func main() {
 			log.Println("Drbl Debug is ON", drblPeers.Debug)
 		}
 	}
-	logFile, err := LoggerInit(Config.Log)
-	if err != nil {
-		log.Fatal(err)
+	if Config.LogDomainsToRedis > 0 {
+		redisConn.Addr = Config.RedisAddress + ":" + Config.RedisPort
+		redisConn.Db = Config.RedisDB
+		log.Println("REDIS domain loging is ON at =>", Config.RedisAddress+":"+Config.RedisPort+"/"+strconv.Itoa(Config.RedisDB))
 	}
-	defer logFile.Close()
 
 	// delay updating the blocklists, cache until the server starts and can serve requests as the local resolver
 	timer := time.NewTimer(time.Second * 1)

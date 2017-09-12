@@ -12,10 +12,10 @@ import (
 )
 
 // BuildVersion returns the build version of grimd, this should be incremented every new release
-var BuildVersion = "1.0.5"
+var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.4"
+var ConfigVersion = "1.0.6"
 
 type config struct {
 	Version           string
@@ -44,6 +44,10 @@ type config struct {
 	DrblBlockWeight   int64
 	DrblTimeout       int
 	DrblDebug         int
+	LogDomainsToRedis int
+	RedisAddress      string
+	RedisPort         string
+	RedisDB           int
 }
 
 var defaultConfig = `# version this config was generated from
@@ -127,6 +131,12 @@ drblpeersfilename = "drblpeers.yaml"
 drblblockweight = 128
 drbltimeout = 30
 drbldebug = 0
+
+# Log domains to redis DB
+logdomainstoredis = 0
+redisaddress = "127.0.0.1"
+redisport = "6379"
+redisdb = 0
 `
 
 // Config is the global configuration

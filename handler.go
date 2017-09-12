@@ -140,6 +140,12 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	var blacklisted bool = false
 	var drblblacklisted bool = false
 	if IPQuery > 0 {
+		if Config.LogDomainsToRedis > 0 {
+			logDomainIntoRedis(Q.Qname)
+			if Config.LogLevel > 0 {
+				log.Println("Logged the domain into redis =>", Q.Qname)
+			}
+		}
 		if Config.UseBlockList > 0 {
 			blacklisted = BlockCache.Exists(Q.Qname)
 			if Config.LogLevel > 0 {
