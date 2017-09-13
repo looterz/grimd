@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/monnand/goredis"
+	"github.com/elico/goredis"
 	"log"
 )
 
