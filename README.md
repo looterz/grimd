@@ -18,11 +18,12 @@ You can also download one of the [releases](https://github.com/looterz/grimd/rel
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.6"
-
-useblocklist = 1
+version = "1.0.8"
 
 # list of sources to pull blocklists from, stores them in ./sources
+
+useblocklist = 0
+
 sources = [
 "http://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -37,7 +38,7 @@ sources = [
 
 # list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
 sourcedirs = [
-"sources"
+ "/var/grim/sources"
 ]
 
 # location of the log file
@@ -47,16 +48,16 @@ log = "/var/log/grimd.log"
 loglevel = 0
 
 # address to bind to for the DNS server
-bind = "0.0.0.0:53"
+bind = ":53"
 
 # address to bind to for the API server
-api = "127.0.0.1:8080"
+api = "127.0.0.1:28080"
 
 # ipv4 address to forward blocked queries to
-nullroute = "0.0.0.0"
+nullroute = "213.151.33.115"
 
 # ipv6 address to forward blocked queries to
-nullroutev6 = "0:0:0:0:0:0:0:0"
+nullroutev6 = "2a01:6500:1:1000::114:100"
 
 # nameservers to forward queries to
 nameservers = ["8.8.8.8:53", "8.8.4.4:53"]
@@ -66,6 +67,12 @@ interval = 200
 
 # query timeout for dns lookups in seconds
 timeout = 5
+
+# disable dns caching
+disablecache = 1
+
+# disable dns queries cache
+disablequestioncache = 1
 
 # cache entry lifespan in seconds
 expire = 600
@@ -81,8 +88,8 @@ blocklist = []
 
 # manual whitelist entries
 whitelist = [
-	"getsentry.com",
-	"www.getsentry.com"
+	"ngtech.co.il",
+	"www.ngtech.co.il"
 ]
 
 # When this string is queried, toggle grimd on and off
@@ -93,8 +100,8 @@ togglename = ""
 reactivationdelay = 300
 
 # Drbl related settings
-usedrbl = 0
-drblpeersfilename = "drblpeers.yaml"
+usedrbl = 1
+drblpeersfilename = "/etc/drblpeers.yaml"
 drblblockweight = 128
 drbltimeout = 30
 drbldebug = 0
