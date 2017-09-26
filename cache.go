@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"log"
 
 	"github.com/miekg/dns"
 	"github.com/ryanuber/go-glob"
@@ -175,6 +176,9 @@ func KeyGen(q Question) string {
 	h.Write([]byte(q.String()))
 	x := h.Sum(nil)
 	key := fmt.Sprintf("%x", x)
+	if Config.LogLevel > 0 {
+		log.Printf("creted key => \"%s\" , for query => \"%s\"\n", key, q.String())
+	}
 	return key
 }
 
