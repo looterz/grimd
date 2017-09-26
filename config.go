@@ -15,7 +15,7 @@ import (
 var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.6"
+var ConfigVersion = "1.0.7"
 
 type config struct {
 	Version           string
@@ -34,6 +34,7 @@ type config struct {
 	Maxcount          int
 	QuestionCacheCap  int
 	TTL               uint32
+	DisableCache      int
 	UseBlockList      int
 	Blocklist         []string
 	Whitelist         []string
@@ -99,6 +100,9 @@ interval = 200
 
 # query timeout for dns lookups in seconds
 timeout = 5
+
+# disable dns caching
+disablecache = 1
 
 # cache entry lifespan in seconds
 expire = 600
