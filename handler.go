@@ -208,8 +208,10 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			}
 
 			// log query
-			NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: true}
-			go QuestionCache.Add(NewEntry)
+			if Config.DisableQuestionCache < 1 {
+				NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: true}
+				go QuestionCache.Add(NewEntry)
+			}
 
 			// cache the block
 			if Config.DisableCache < 1 {
@@ -227,9 +229,10 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	// log query
-	NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
-	go QuestionCache.Add(NewEntry)
-
+	if Config.DisableQuestionCache < 1 {
+		NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
+		go QuestionCache.Add(NewEntry)
+	}
 	mesg, err := h.resolver.Lookup(Net, req)
 
 	if err != nil {

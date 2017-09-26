@@ -12,43 +12,44 @@ import (
 )
 
 // BuildVersion returns the build version of grimd, this should be incremented every new release
-var BuildVersion = "1.0.7"
+var BuildVersion = "1.0.8"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.7"
+var ConfigVersion = "1.0.8"
 
 type config struct {
-	Version           string
-	Sources           []string
-	SourceDirs        []string
-	Log               string
-	LogLevel          int
-	Bind              string
-	API               string
-	Nullroute         string
-	Nullroutev6       string
-	Nameservers       []string
-	Interval          int
-	Timeout           int
-	Expire            int
-	Maxcount          int
-	QuestionCacheCap  int
-	TTL               uint32
-	DisableCache      int
-	UseBlockList      int
-	Blocklist         []string
-	Whitelist         []string
-	ToggleName        string
-	ReactivationDelay uint
-	UseDrbl           int
-	DrblPeersFilename string
-	DrblBlockWeight   int64
-	DrblTimeout       int
-	DrblDebug         int
-	LogDomainsToRedis int
-	RedisAddress      string
-	RedisPort         string
-	RedisDB           int
+	Version              string
+	Sources              []string
+	SourceDirs           []string
+	Log                  string
+	LogLevel             int
+	Bind                 string
+	API                  string
+	Nullroute            string
+	Nullroutev6          string
+	Nameservers          []string
+	Interval             int
+	Timeout              int
+	Expire               int
+	Maxcount             int
+	QuestionCacheCap     int
+	TTL                  uint32
+	DisableCache         int
+	DisableQuestionCache int
+	UseBlockList         int
+	Blocklist            []string
+	Whitelist            []string
+	ToggleName           string
+	ReactivationDelay    uint
+	UseDrbl              int
+	DrblPeersFilename    string
+	DrblBlockWeight      int64
+	DrblTimeout          int
+	DrblDebug            int
+	LogDomainsToRedis    int
+	RedisAddress         string
+	RedisPort            string
+	RedisDB              int
 }
 
 var defaultConfig = `# version this config was generated from
@@ -103,6 +104,9 @@ timeout = 5
 
 # disable dns caching
 disablecache = 1
+
+# disable dns queries cache
+disablequestioncache = 1
 
 # cache entry lifespan in seconds
 expire = 600
