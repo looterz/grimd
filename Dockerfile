@@ -11,5 +11,6 @@ WORKDIR /app
 
 EXPOSE 53:53/udp
 EXPOSE 53:53/tcp
+EXPOSE 8080
 
 ENTRYPOINT ["/app/grimd"]
