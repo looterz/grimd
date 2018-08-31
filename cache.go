@@ -59,7 +59,7 @@ type Mesg struct {
 // Cache interface
 type Cache interface {
 	Get(key string) (Msg *dns.Msg, blocked bool, err error)
-	Set(key string, Msg *dns.Msg, blocked bool) error
+	Set(key string, Msg *dns.Msg, ttl uint, blocked bool) error
 	Exists(key string) bool
 	Remove(key string)
 	Length() int
@@ -68,7 +68,6 @@ type Cache interface {
 // MemoryCache type
 type MemoryCache struct {
 	Backend  map[string]Mesg
-	Expire   time.Duration
 	Maxcount int
 	mu       sync.RWMutex
 }
@@ -119,14 +118,18 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 }
 
 // Set sets a keys value to a Mesg
-func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
+func (c *MemoryCache) Set(key string, msg *dns.Msg, ttl uint, blocked bool) error {
 	key = strings.ToLower(key)
 
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
 	}
 
-	expire := time.Now().Add(c.Expire)
+	if ttl == 0 {
+		return nil
+	}
+
+	expire := time.Now().Add(time.Duration(ttl) * time.Second)
 	mesg := Mesg{msg, blocked, expire}
 	c.mu.Lock()
 	c.Backend[key] = mesg

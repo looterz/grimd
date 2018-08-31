@@ -55,12 +55,11 @@ func NewHandler() *DNSHandler {
 
 	cache = &MemoryCache{
 		Backend:  make(map[string]Mesg, Config.Maxcount),
-		Expire:   time.Duration(Config.Expire) * time.Second,
 		Maxcount: Config.Maxcount,
 	}
 	negCache = &MemoryCache{
-		Backend:  make(map[string]Mesg),
-		Expire:   time.Duration(Config.Expire) * time.Second / 2,
+		Backend: make(map[string]Mesg),
+		// Expire:   time.Duration(Config.Expire) * time.Second / 2,
 		Maxcount: Config.Maxcount,
 	}
 
@@ -85,7 +84,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	var grimdActive = grimdActivation.query()
-	if len(Config.ToggleName) >0 && strings.Contains(Q.Qname, Config.ToggleName) {
+	if len(Config.ToggleName) > 0 && strings.Contains(Q.Qname, Config.ToggleName) {
 		if Config.LogLevel > 0 {
 			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
 		}
@@ -181,7 +180,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			go QuestionCache.Add(NewEntry)
 
 			// cache the block
-			err := h.cache.Set(key, m, true)
+			err := h.cache.Set(key, m, Config.Expire, true)
 			if err != nil {
 				log.Printf("Set %s block cache failed: %s\n", Q.String(), err.Error())
 			}
@@ -204,7 +203,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		h.HandleFailed(w, req)
 
 		// cache the failure, too!
-		if err = h.negCache.Set(key, nil, false); err != nil {
+		if err = h.negCache.Set(key, nil, Config.Expire, false); err != nil {
 			log.Printf("set %s negative cache failed: %v\n", Q.String(), err)
 		}
 		return
@@ -217,7 +216,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			h.HandleFailed(w, req)
 
 			// cache the failure, too!
-			if err = h.negCache.Set(key, nil, false); err != nil {
+			if err = h.negCache.Set(key, nil, Config.Expire, false); err != nil {
 				log.Printf("set %s negative cache failed: %v\n", Q.String(), err)
 			}
 			return
@@ -232,7 +231,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 				log.Printf("%s is blacklisted and grimd not active: not caching\n", Q.String())
 			}
 		} else {
-			err = h.cache.Set(key, mesg, false)
+			err = h.cache.Set(key, mesg, Config.Expire, false)
 			if err != nil {
 				log.Printf("set %s cache failed: %s\n", Q.String(), err.Error())
 			}
