@@ -39,9 +39,20 @@ func main() {
 	defer logFile.Close()
 
 	// delay updating the blocklists, cache until the server starts and can serve requests as the local resolver
-	timer := time.NewTimer(time.Second * 1)
+	start_update := make(chan bool, 1)
+
+	//abort if the server does not come up in 10 seconds
+	timer := time.NewTimer(time.Second * 10)
 	go func() {
 		<-timer.C
+		start_update <- false
+	}()
+
+	go func() {
+		run := <-start_update
+		if !run {
+			panic("The DNS server did not start in 10 seconds")
+		}
 		if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
 			if err := Update(); err != nil {
 				log.Fatal(err)
@@ -62,7 +73,7 @@ func main() {
 		wTimeout: 5 * time.Second,
 	}
 
-	server.Run()
+	server.Run(start_update)
 
 	if err := StartAPIServer(); err != nil {
 		log.Fatal(err)
