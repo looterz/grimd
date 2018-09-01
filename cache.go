@@ -113,7 +113,9 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 		return nil, false, KeyNotFound{key}
 	}
 
-	now := WallClock.Now()
+	//Truncate time to the second, so that subsecond queries won't keep moving
+	//forward the last update time without touching the TTL
+	now := WallClock.Now().Truncate(time.Second)
 	elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
 	mesg.LastUpdateTime = now
 
@@ -139,7 +141,7 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 		return CacheIsFull{}
 	}
 
-	mesg := Mesg{msg, blocked, WallClock.Now()}
+	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
 	c.Backend[key] = &mesg
 	c.mu.Unlock()

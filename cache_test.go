@@ -154,25 +154,24 @@ func TestCacheTtl(t *testing.T) {
 	for _, answer := range msg.Answer {
 		switch answer.Header().Rrtype {
 		case dns.TypeA:
-			assert.Equal(t, answer.Header().Ttl, attl, "TTL should be unchanged")
+			assert.Equal(t, attl, answer.Header().Ttl, "TTL should be unchanged")
 		case dns.TypeAAAA:
-			assert.Equal(t, answer.Header().Ttl, aaaattl, "TTL should be unchanged")
+			assert.Equal(t, aaaattl, answer.Header().Ttl, "TTL should be unchanged")
 		default:
 			t.Error("Unexpected RR type")
 		}
 	}
 
 	fakeClock.Advance(5 * time.Second)
-
 	msg, _, err = cache.Get(testDomain)
 	assert.Nil(t, err)
 
 	for _, answer := range msg.Answer {
 		switch answer.Header().Rrtype {
 		case dns.TypeA:
-			assert.Equal(t, answer.Header().Ttl, attl-5, "TTL should be decreased")
+			assert.Equal(t, attl-5, answer.Header().Ttl, "TTL should be decreased")
 		case dns.TypeAAAA:
-			assert.Equal(t, answer.Header().Ttl, aaaattl-5, "TTL should be decreased")
+			assert.Equal(t, aaaattl-5, answer.Header().Ttl, "TTL should be decreased")
 		default:
 			t.Error("Unexpected RR type")
 		}
@@ -185,9 +184,9 @@ func TestCacheTtl(t *testing.T) {
 	for _, answer := range msg.Answer {
 		switch answer.Header().Rrtype {
 		case dns.TypeA:
-			assert.Equal(t, answer.Header().Ttl, uint32(0), "TTL should be zero")
+			assert.Equal(t, uint32(0), answer.Header().Ttl, "TTL should be zero")
 		case dns.TypeAAAA:
-			assert.Equal(t, answer.Header().Ttl, aaaattl-10, "TTL should be decreased")
+			assert.Equal(t, aaaattl-10, answer.Header().Ttl, "TTL should be decreased")
 		default:
 			t.Error("Unexpected RR type")
 		}
@@ -207,5 +206,53 @@ func TestCacheTtl(t *testing.T) {
 	if _, ok := err.(KeyNotFound); !ok {
 		t.Error("cache entry still existed after expiring - ", err)
 	}
+}
+
+func TestCacheTtlFrequentPolling(t *testing.T) {
+	const (
+		testDomain = "www.google.com"
+	)
+
+	fakeClock := clockwork.NewFakeClock()
+	WallClock = fakeClock
+	cache := makeCache()
+
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
+
+	var attl uint32 = 10
+	nullroute := net.ParseIP(Config.Nullroute)
+	a := &dns.A{
+		Hdr: dns.RR_Header{
+			Name:   testDomain,
+			Rrtype: dns.TypeA,
+			Class:  dns.ClassINET,
+			Ttl:    attl,
+		},
+		A: nullroute}
+	m.Answer = append(m.Answer, a)
+
+	if err := cache.Set(testDomain, m, true); err != nil {
+		t.Error(err)
+	}
+
+	msg, _, err := cache.Get(testDomain)
+	assert.Nil(t, err)
+
+	assert.Equal(t, attl, msg.Answer[0].Header().Ttl, "TTL should be unchanged")
+
+	//Poll 50 times at 100ms intervals: the TTL should go down by 5s
+	for i := 0; i < 50; i++ {
+		fakeClock.Advance(100 * time.Millisecond)
+		_, _, err := cache.Get(testDomain)
+		assert.Nil(t, err)
+	}
+
+	msg, _, err = cache.Get(testDomain)
+	assert.Nil(t, err)
+
+	assert.Equal(t, attl-5, msg.Answer[0].Header().Ttl, "TTL should be decreased")
+
+	cache.Remove(testDomain)
 
 }
