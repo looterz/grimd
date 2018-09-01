@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -59,7 +60,7 @@ type Mesg struct {
 // Cache interface
 type Cache interface {
 	Get(key string) (Msg *dns.Msg, blocked bool, err error)
-	Set(key string, Msg *dns.Msg, ttl uint, blocked bool) error
+	Set(key string, Msg *dns.Msg, ttl uint32, blocked bool) error
 	Exists(key string) bool
 	Remove(key string)
 	Length() int
@@ -106,10 +107,16 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	c.mu.RUnlock()
 
 	if !ok {
+		if Config.LogLevel > 1 {
+			log.Printf("Cache: Cannot find key %s\n", key)
+		}
 		return nil, false, KeyNotFound{key}
 	}
 
 	if mesg.Expire.Before(time.Now()) {
+		if Config.LogLevel > 1 {
+			log.Printf("Cache: Key expired %s @%d/%d\n", key, mesg.Expire, time.Now())
+		}
 		c.Remove(key)
 		return nil, false, KeyExpired{key}
 	}
@@ -118,15 +125,11 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 }
 
 // Set sets a keys value to a Mesg
-func (c *MemoryCache) Set(key string, msg *dns.Msg, ttl uint, blocked bool) error {
+func (c *MemoryCache) Set(key string, msg *dns.Msg, ttl uint32, blocked bool) error {
 	key = strings.ToLower(key)
 
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
-	}
-
-	if ttl == 0 {
-		return nil
 	}
 
 	expire := time.Now().Add(time.Duration(ttl) * time.Second)

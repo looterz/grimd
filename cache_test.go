@@ -4,26 +4,28 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/miekg/dns"
 )
+
+func makeCache() MemoryCache {
+	return MemoryCache{
+		Backend:  make(map[string]Mesg, Config.Maxcount),
+		Maxcount: Config.Maxcount,
+	}
+}
 
 func TestCache(t *testing.T) {
 	const (
 		testDomain = "www.google.com"
 	)
 
-	cache := &MemoryCache{
-		Backend:  make(map[string]Mesg, Config.Maxcount),
-		Expire:   time.Duration(Config.Expire) * time.Second,
-		Maxcount: Config.Maxcount,
-	}
+	cache := makeCache()
 
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
-	if err := cache.Set(testDomain, m, true); err != nil {
+	if err := cache.Set(testDomain, m, Config.Expire, true); err != nil {
 		t.Error(err)
 	}
 
@@ -99,4 +101,30 @@ func TestBlockCacheGlob(t *testing.T) {
 	if exists := cache.Exists(testDomain3); exists {
 		t.Error(testDomain3, "did exist in block cache")
 	}
+}
+
+func TestCacheTtl(t *testing.T) {
+	const (
+		testDomain = "www.google.com"
+	)
+
+	cache := makeCache()
+
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
+
+	if err := cache.Set(testDomain, m, 10, true); err != nil {
+		t.Error(err)
+	}
+
+	if _, _, err := cache.Get(testDomain); err != nil && err.Error() != fmt.Sprintf("%s expired", testDomain) {
+		t.Error(err)
+	}
+
+	cache.Remove(testDomain)
+
+	if _, _, err := cache.Get(testDomain); err == nil {
+		t.Error("cache entry still existed after remove")
+	}
+
 }

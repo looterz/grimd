@@ -30,7 +30,7 @@ type config struct {
 	Nameservers       []string
 	Interval          int
 	Timeout           int
-	Expire            uint
+	Expire            uint32
 	Maxcount          int
 	QuestionCacheCap  int
 	TTL               uint32
