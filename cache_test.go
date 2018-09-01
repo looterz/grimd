@@ -2,17 +2,19 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/jonboulle/clockwork"
 	"github.com/miekg/dns"
+	"github.com/stretchr/testify/assert"
 )
 
 func makeCache() MemoryCache {
 	return MemoryCache{
-		Backend:  make(map[string]Mesg, Config.Maxcount),
+		Backend:  make(map[string]*Mesg, Config.Maxcount),
 		Maxcount: Config.Maxcount,
 	}
 }
@@ -28,7 +30,7 @@ func TestCache(t *testing.T) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
-	if err := cache.Set(testDomain, m, Config.Expire, true); err != nil {
+	if err := cache.Set(testDomain, m, true); err != nil {
 		t.Error(err)
 	}
 
@@ -118,29 +120,83 @@ func TestCacheTtl(t *testing.T) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
-	if err := cache.Set(testDomain, m, 10, true); err != nil {
+	var attl uint32 = 10
+	var aaaattl uint32 = 20
+	nullroute := net.ParseIP(Config.Nullroute)
+	nullroutev6 := net.ParseIP(Config.Nullroutev6)
+	a := &dns.A{
+		Hdr: dns.RR_Header{
+			Name:   testDomain,
+			Rrtype: dns.TypeA,
+			Class:  dns.ClassINET,
+			Ttl:    attl,
+		},
+		A: nullroute}
+	m.Answer = append(m.Answer, a)
+
+	aaaa := &dns.AAAA{
+		Hdr: dns.RR_Header{
+			Name:   testDomain,
+			Rrtype: dns.TypeAAAA,
+			Class:  dns.ClassINET,
+			Ttl:    aaaattl,
+		},
+		AAAA: nullroutev6}
+	m.Answer = append(m.Answer, aaaa)
+
+	if err := cache.Set(testDomain, m, true); err != nil {
 		t.Error(err)
 	}
 
-	if _, _, err := cache.Get(testDomain); err != nil {
-		t.Error(err)
+	msg, _, err := cache.Get(testDomain)
+	assert.Nil(t, err)
+
+	for _, answer := range msg.Answer {
+		switch answer.Header().Rrtype {
+		case dns.TypeA:
+			assert.Equal(t, answer.Header().Ttl, attl, "TTL should be unchanged")
+		case dns.TypeAAAA:
+			assert.Equal(t, answer.Header().Ttl, aaaattl, "TTL should be unchanged")
+		default:
+			t.Error("Unexpected RR type")
+		}
 	}
 
 	fakeClock.Advance(5 * time.Second)
 
-	if _, _, err := cache.Get(testDomain); err != nil {
-		t.Error(err)
+	msg, _, err = cache.Get(testDomain)
+	assert.Nil(t, err)
+
+	for _, answer := range msg.Answer {
+		switch answer.Header().Rrtype {
+		case dns.TypeA:
+			assert.Equal(t, answer.Header().Ttl, attl-5, "TTL should be decreased")
+		case dns.TypeAAAA:
+			assert.Equal(t, answer.Header().Ttl, aaaattl-5, "TTL should be decreased")
+		default:
+			t.Error("Unexpected RR type")
+		}
 	}
 
 	fakeClock.Advance(5 * time.Second)
-	if _, _, err := cache.Get(testDomain); err != nil {
-		t.Error(err)
+	_, _, err = cache.Get(testDomain)
+	assert.Nil(t, err)
+
+	for _, answer := range msg.Answer {
+		switch answer.Header().Rrtype {
+		case dns.TypeA:
+			assert.Equal(t, answer.Header().Ttl, uint32(0), "TTL should be zero")
+		case dns.TypeAAAA:
+			assert.Equal(t, answer.Header().Ttl, aaaattl-10, "TTL should be decreased")
+		default:
+			t.Error("Unexpected RR type")
+		}
 	}
 
 	fakeClock.Advance(1 * time.Second)
 
 	// accessing an expired key will return KeyExpired error
-	_, _, err := cache.Get(testDomain)
+	_, _, err = cache.Get(testDomain)
 	if _, ok := err.(KeyExpired); !ok {
 		t.Error(err)
 	}

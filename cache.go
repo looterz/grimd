@@ -52,15 +52,15 @@ func (e SerializerError) Error() string {
 
 // Mesg represents a cache entry
 type Mesg struct {
-	Msg     *dns.Msg
-	Blocked bool
-	Expire  time.Time
+	Msg            *dns.Msg
+	Blocked        bool
+	LastUpdateTime time.Time
 }
 
 // Cache interface
 type Cache interface {
 	Get(key string) (Msg *dns.Msg, blocked bool, err error)
-	Set(key string, Msg *dns.Msg, ttl uint32, blocked bool) error
+	Set(key string, Msg *dns.Msg, blocked bool) error
 	Exists(key string) bool
 	Remove(key string)
 	Length() int
@@ -68,7 +68,7 @@ type Cache interface {
 
 // MemoryCache type
 type MemoryCache struct {
-	Backend  map[string]Mesg
+	Backend  map[string]*Mesg
 	Maxcount int
 	mu       sync.RWMutex
 }
@@ -113,29 +113,35 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 		return nil, false, KeyNotFound{key}
 	}
 
-	if mesg.Expire.Before(WallClock.Now()) {
-		if Config.LogLevel > 1 {
-			log.Printf("Cache: Key expired %s @%d/%d\n", key, mesg.Expire, WallClock.Now())
+	now := WallClock.Now()
+	elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
+	mesg.LastUpdateTime = now
+
+	for _, answer := range mesg.Msg.Answer {
+		if elapsed > answer.Header().Ttl {
+			if Config.LogLevel > 1 {
+				log.Printf("Cache: Key expired %s", key)
+			}
+			c.Remove(key)
+			return nil, false, KeyExpired{key}
 		}
-		c.Remove(key)
-		return nil, false, KeyExpired{key}
+		answer.Header().Ttl -= elapsed
 	}
 
 	return mesg.Msg, mesg.Blocked, nil
 }
 
 // Set sets a keys value to a Mesg
-func (c *MemoryCache) Set(key string, msg *dns.Msg, ttl uint32, blocked bool) error {
+func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 	key = strings.ToLower(key)
 
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
 	}
 
-	expire := WallClock.Now().Add(time.Duration(ttl) * time.Second)
-	mesg := Mesg{msg, blocked, expire}
+	mesg := Mesg{msg, blocked, WallClock.Now()}
 	c.mu.Lock()
-	c.Backend[key] = mesg
+	c.Backend[key] = &mesg
 	c.mu.Unlock()
 
 	return nil
