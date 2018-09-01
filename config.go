@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/jonboulle/clockwork"
 )
 
 // BuildVersion returns the build version of grimd, this should be incremented every new release
@@ -112,6 +113,9 @@ togglename = ""
 # having been turned off.
 reactivationdelay = 300
 `
+
+// WallClock is the wall clock
+var WallClock = clockwork.NewRealClock()
 
 // Config is the global configuration
 var Config config

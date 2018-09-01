@@ -113,9 +113,9 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 		return nil, false, KeyNotFound{key}
 	}
 
-	if mesg.Expire.Before(time.Now()) {
+	if mesg.Expire.Before(WallClock.Now()) {
 		if Config.LogLevel > 1 {
-			log.Printf("Cache: Key expired %s @%d/%d\n", key, mesg.Expire, time.Now())
+			log.Printf("Cache: Key expired %s @%d/%d\n", key, mesg.Expire, WallClock.Now())
 		}
 		c.Remove(key)
 		return nil, false, KeyExpired{key}
@@ -132,7 +132,7 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, ttl uint32, blocked bool) er
 		return CacheIsFull{}
 	}
 
-	expire := time.Now().Add(time.Duration(ttl) * time.Second)
+	expire := WallClock.Now().Add(time.Duration(ttl) * time.Second)
 	mesg := Mesg{msg, blocked, expire}
 	c.mu.Lock()
 	c.Backend[key] = mesg

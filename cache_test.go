@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/jonboulle/clockwork"
 	"github.com/miekg/dns"
 )
 
@@ -21,6 +23,7 @@ func TestCache(t *testing.T) {
 	)
 
 	cache := makeCache()
+	WallClock = clockwork.NewFakeClock()
 
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
@@ -29,7 +32,7 @@ func TestCache(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, _, err := cache.Get(testDomain); err != nil && err.Error() != fmt.Sprintf("%s expired", testDomain) {
+	if _, _, err := cache.Get(testDomain); err != nil {
 		t.Error(err)
 	}
 
@@ -108,6 +111,8 @@ func TestCacheTtl(t *testing.T) {
 		testDomain = "www.google.com"
 	)
 
+	fakeClock := clockwork.NewFakeClock()
+	WallClock = fakeClock
 	cache := makeCache()
 
 	m := new(dns.Msg)
@@ -117,14 +122,34 @@ func TestCacheTtl(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, _, err := cache.Get(testDomain); err != nil && err.Error() != fmt.Sprintf("%s expired", testDomain) {
+	if _, _, err := cache.Get(testDomain); err != nil {
 		t.Error(err)
 	}
 
-	cache.Remove(testDomain)
+	fakeClock.Advance(5 * time.Second)
 
-	if _, _, err := cache.Get(testDomain); err == nil {
-		t.Error("cache entry still existed after remove")
+	if _, _, err := cache.Get(testDomain); err != nil {
+		t.Error(err)
+	}
+
+	fakeClock.Advance(5 * time.Second)
+	if _, _, err := cache.Get(testDomain); err != nil {
+		t.Error(err)
+	}
+
+	fakeClock.Advance(1 * time.Second)
+
+	// accessing an expired key will return KeyExpired error
+	_, _, err := cache.Get(testDomain)
+	if _, ok := err.(KeyExpired); !ok {
+		t.Error(err)
+	}
+
+	// accessing an expired key will remove it from the cache
+	_, _, err = cache.Get(testDomain)
+
+	if _, ok := err.(KeyNotFound); !ok {
+		t.Error("cache entry still existed after expiring - ", err)
 	}
 
 }
