@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -51,9 +52,9 @@ func (e SerializerError) Error() string {
 
 // Mesg represents a cache entry
 type Mesg struct {
-	Msg     *dns.Msg
-	Blocked bool
-	Expire  time.Time
+	Msg            *dns.Msg
+	Blocked        bool
+	LastUpdateTime time.Time
 }
 
 // Cache interface
@@ -67,8 +68,7 @@ type Cache interface {
 
 // MemoryCache type
 type MemoryCache struct {
-	Backend  map[string]Mesg
-	Expire   time.Duration
+	Backend  map[string]*Mesg
 	Maxcount int
 	mu       sync.RWMutex
 }
@@ -107,12 +107,27 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	c.mu.RUnlock()
 
 	if !ok {
+		if Config.LogLevel > 1 {
+			log.Printf("Cache: Cannot find key %s\n", key)
+		}
 		return nil, false, KeyNotFound{key}
 	}
 
-	if mesg.Expire.Before(time.Now()) {
-		c.Remove(key)
-		return nil, false, KeyExpired{key}
+	//Truncate time to the second, so that subsecond queries won't keep moving
+	//forward the last update time without touching the TTL
+	now := WallClock.Now().Truncate(time.Second)
+	elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
+	mesg.LastUpdateTime = now
+
+	for _, answer := range mesg.Msg.Answer {
+		if elapsed > answer.Header().Ttl {
+			if Config.LogLevel > 1 {
+				log.Printf("Cache: Key expired %s", key)
+			}
+			c.Remove(key)
+			return nil, false, KeyExpired{key}
+		}
+		answer.Header().Ttl -= elapsed
 	}
 
 	return mesg.Msg, mesg.Blocked, nil
@@ -126,10 +141,9 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 		return CacheIsFull{}
 	}
 
-	expire := time.Now().Add(c.Expire)
-	mesg := Mesg{msg, blocked, expire}
+	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
-	c.Backend[key] = mesg
+	c.Backend[key] = &mesg
 	c.mu.Unlock()
 
 	return nil

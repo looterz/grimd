@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/jonboulle/clockwork"
 )
 
 // BuildVersion returns the build version of grimd, this should be incremented every new release
@@ -30,7 +31,7 @@ type config struct {
 	Nameservers       []string
 	Interval          int
 	Timeout           int
-	Expire            int
+	Expire            uint32
 	Maxcount          int
 	QuestionCacheCap  int
 	TTL               uint32
@@ -112,6 +113,9 @@ togglename = ""
 # having been turned off.
 reactivationdelay = 300
 `
+
+// WallClock is the wall clock
+var WallClock = clockwork.NewRealClock()
 
 // Config is the global configuration
 var Config config

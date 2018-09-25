@@ -54,13 +54,12 @@ func NewHandler() *DNSHandler {
 	resolver = &Resolver{clientConfig}
 
 	cache = &MemoryCache{
-		Backend:  make(map[string]Mesg, Config.Maxcount),
-		Expire:   time.Duration(Config.Expire) * time.Second,
+		Backend:  make(map[string]*Mesg, Config.Maxcount),
 		Maxcount: Config.Maxcount,
 	}
 	negCache = &MemoryCache{
-		Backend:  make(map[string]Mesg),
-		Expire:   time.Duration(Config.Expire) * time.Second / 2,
+		Backend: make(map[string]*Mesg),
+		// Expire:   time.Duration(Config.Expire) * time.Second / 2,
 		Maxcount: Config.Maxcount,
 	}
 
@@ -85,7 +84,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	var grimdActive = grimdActivation.query()
-	if len(Config.ToggleName) >0 && strings.Contains(Q.Qname, Config.ToggleName) {
+	if len(Config.ToggleName) > 0 && strings.Contains(Q.Qname, Config.ToggleName) {
 		if Config.LogLevel > 0 {
 			log.Printf("Found ToggleName! (%s)\n", Q.Qname)
 		}
@@ -180,7 +179,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: true}
 			go QuestionCache.Add(NewEntry)
 
-			// cache the block
+			// cache the block; we don't know the true TTL for blocked entries: we just enforce our config
 			err := h.cache.Set(key, m, true)
 			if err != nil {
 				log.Printf("Set %s block cache failed: %s\n", Q.String(), err.Error())
@@ -224,6 +223,22 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		}
 	}
 
+	//find the smallest ttl
+	ttl := Config.Expire
+	var candidate_ttl uint32 = 0
+
+	for index, answer := range mesg.Answer {
+		if Config.LogLevel > 1 {
+			log.Printf("Answer %d - %s\n", index, answer.String())
+		}
+
+		candidate_ttl = answer.Header().Ttl
+
+		if candidate_ttl > 0 && candidate_ttl < ttl {
+			ttl = candidate_ttl
+		}
+	}
+
 	h.WriteReplyMsg(w, mesg)
 
 	if IPQuery > 0 && len(mesg.Answer) > 0 {
@@ -237,7 +252,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 				log.Printf("set %s cache failed: %s\n", Q.String(), err.Error())
 			}
 			if Config.LogLevel > 0 {
-				log.Printf("insert %s into cache\n", Q.String())
+				log.Printf("insert %s into cache with ttl %d\n", Q.String(), ttl)
 			}
 		}
 	}
