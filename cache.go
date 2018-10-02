@@ -102,8 +102,31 @@ type MemoryQuestionCache struct {
 func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	key = strings.ToLower(key)
 
+	//Truncate time to the second, so that subsecond queries won't keep moving
+	//forward the last update time without touching the TTL
+	now := WallClock.Now().Truncate(time.Second)
+
+	expired := false
 	c.mu.RLock()
 	mesg, ok := c.Backend[key]
+	if ok && mesg.Msg == nil {
+		ok = false
+		log.Printf("Cache: key %s returned nil entry", key)
+		c.removeNoLock(key)
+	}
+	if ok {
+		elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
+		for _, answer := range mesg.Msg.Answer {
+			if elapsed > answer.Header().Ttl {
+				if Config.LogLevel > 1 {
+					log.Printf("Cache: Key expired %s", key)
+				}
+				c.removeNoLock(key)
+				expired = true
+			}
+			answer.Header().Ttl -= elapsed
+		}
+	}
 	c.mu.RUnlock()
 
 	if !ok {
@@ -113,22 +136,11 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 		return nil, false, KeyNotFound{key}
 	}
 
-	//Truncate time to the second, so that subsecond queries won't keep moving
-	//forward the last update time without touching the TTL
-	now := WallClock.Now().Truncate(time.Second)
-	elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
-	mesg.LastUpdateTime = now
-
-	for _, answer := range mesg.Msg.Answer {
-		if elapsed > answer.Header().Ttl {
-			if Config.LogLevel > 1 {
-				log.Printf("Cache: Key expired %s", key)
-			}
-			c.Remove(key)
-			return nil, false, KeyExpired{key}
-		}
-		answer.Header().Ttl -= elapsed
+	if expired {
+		return nil, false, KeyExpired{key}
 	}
+
+	mesg.LastUpdateTime = now
 
 	return mesg.Msg, mesg.Blocked, nil
 }
@@ -140,7 +152,9 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
 	}
-
+	if msg == nil {
+		log.Printf("Setting an empty value for key %s", key)
+	}
 	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
 	c.Backend[key] = &mesg
@@ -150,11 +164,15 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 }
 
 // Remove removes an entry from the cache
-func (c *MemoryCache) Remove(key string) {
+func (c *MemoryCache) removeNoLock(key string) {
 	key = strings.ToLower(key)
-
-	c.mu.Lock()
 	delete(c.Backend, key)
+}
+
+// Remove removes an entry from the cache
+func (c *MemoryCache) Remove(key string) {
+	c.mu.Lock()
+	c.removeNoLock(key)
 	c.mu.Unlock()
 }
 
@@ -189,6 +207,9 @@ func KeyGen(q Question) string {
 	h.Write([]byte(q.String()))
 	x := h.Sum(nil)
 	key := fmt.Sprintf("%x", x)
+	if Config.LogLevel > 1 {
+		log.Printf("KeyGen: %s %s", q.String(), key)
+	}
 	return key
 }
 
