@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"gopkg.in/gin-contrib/cors.v1"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-contrib/cors.v1"
 )
 
 // StartAPIServer launches the API server
@@ -119,6 +119,11 @@ func StartAPIServer() error {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Illegal value for 'state'"})
 			}
 		}
+	})
+
+	router.POST("/blocklist/update", func(c *gin.Context) {
+		PerformUpdate(true)
+		c.AbortWithStatus(http.StatusOK)
 	})
 
 	if err := router.Run(Config.API); err != nil {

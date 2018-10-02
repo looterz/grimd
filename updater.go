@@ -17,7 +17,7 @@ var timesSeen = make(map[string]int)
 var whitelist = make(map[string]bool)
 
 // Update downloads all of the blocklists and imports them into the database
-func Update() error {
+func Update(blockCache *MemoryBlockCache) error {
 	if _, err := os.Stat("sources"); os.IsNotExist(err) {
 		if err := os.Mkdir("sources", 0700); err != nil {
 			return fmt.Errorf("error creating sources directory: %s", err)
@@ -29,7 +29,7 @@ func Update() error {
 	}
 
 	for _, entry := range Config.Blocklist {
-		BlockCache.Set(entry, true)
+		blockCache.Set(entry, true)
 	}
 
 	if err := fetchSources(); err != nil {
@@ -88,7 +88,7 @@ func fetchSources() error {
 }
 
 // UpdateBlockCache updates the BlockCache
-func UpdateBlockCache() error {
+func UpdateBlockCache(blockCache *MemoryBlockCache) error {
 	log.Printf("loading blocked domains from %d locations...\n", len(Config.SourceDirs))
 
 	for _, dir := range Config.SourceDirs {
@@ -150,4 +150,25 @@ func parseHostFile(file *os.File) error {
 	}
 
 	return nil
+}
+
+// Performs the update of the block cache by building a new cache and swapping
+// it for the old cache.
+func PerformUpdate(forceUpdate bool) {
+	newBlockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
+	if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
+		if err := Update(newBlockCache); err != nil {
+			log.Fatal(err)
+		}
+	}
+	if err := UpdateBlockCache(newBlockCache); err != nil {
+		log.Fatal(err)
+	}
+
+	oldBlockCache := BlockCache
+	oldBlockCache.mu.Lock()
+	newBlockCache.mu.Lock()
+	BlockCache = newBlockCache
+	newBlockCache.mu.Unlock()
+	oldBlockCache.mu.Unlock()
 }

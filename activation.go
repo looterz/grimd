@@ -25,7 +25,7 @@ func (a *ActivationHandler) loop(quit <-chan bool) {
 	a.toggle_channel = make(chan ToggleData)
 	a.set_channel = make(chan bool)
 
-    ticker := time.Tick(1 * time.Second)
+	ticker := time.Tick(1 * time.Second)
 
 	var nextToggleTime = time.Now()
 
@@ -59,7 +59,7 @@ forever:
 			grimdActive = v
 			reactivate_pending = false
 			a.set_channel <- grimdActive
-        case <- ticker:
+		case <-ticker:
 			now := time.Now()
 			if reactivate_pending && now.After(reactivate) {
 				log.Print("Reactivating grimd (timer)\n")

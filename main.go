@@ -53,14 +53,7 @@ func main() {
 		if !run {
 			panic("The DNS server did not start in 10 seconds")
 		}
-		if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
-			if err := Update(); err != nil {
-				log.Fatal(err)
-			}
-		}
-		if err := UpdateBlockCache(); err != nil {
-			log.Fatal(err)
-		}
+		PerformUpdate(forceUpdate)
 	}()
 
 	grimdActive = true
