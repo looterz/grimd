@@ -111,7 +111,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	mesg, ok := c.Backend[key]
 	if ok && mesg.Msg == nil {
 		ok = false;
-		log.Printf("Cache: key %s returned nil entry");
+		log.Printf("Cache: key %s returned nil entry", key);
 		c.removeNoLock(key)
 	}
 	if ok{
@@ -153,7 +153,13 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 	if c.Full() && !c.Exists(key) {
 		return CacheIsFull{}
 	}
-
+    if msg == nil {
+		log.Printf("Trying to set an empty value for key %s", key);
+		if Config.LogLevel > 1 {
+			panic("Empty cache value")
+		}
+		return nil
+    }
 	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
 	c.Backend[key] = &mesg
