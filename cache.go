@@ -275,7 +275,7 @@ func (c *MemoryQuestionCache) Add(q QuestionCacheEntry) {
 // Clear clears the contents of the cache
 func (c *MemoryQuestionCache) Clear() {
 	c.mu.Lock()
-	c.Backend = nil
+	c.Backend = make([]QuestionCacheEntry, 0, 0)
 	c.mu.Unlock()
 }
 
