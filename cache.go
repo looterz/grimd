@@ -109,6 +109,11 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	expired := false
 	c.mu.RLock()
 	mesg, ok := c.Backend[key]
+	if ok && mesg.Msg == nil {
+		ok = false;
+		log.Printf("Cache: key %s returned nil entry");
+		c.removeNoLock(key)
+	}
 	if ok{
 		elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
 		for _, answer := range mesg.Msg.Answer {
