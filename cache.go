@@ -116,7 +116,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 				if Config.LogLevel > 1 {
 					log.Printf("Cache: Key expired %s", key)
 				}
-				c.Remove(key)
+				c.removeNoLock(key)
 				expired = true
 			}
 			answer.Header().Ttl -= elapsed
@@ -158,11 +158,15 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 }
 
 // Remove removes an entry from the cache
-func (c *MemoryCache) Remove(key string) {
+func (c *MemoryCache) removeNoLock(key string) {
 	key = strings.ToLower(key)
-
-	c.mu.Lock()
 	delete(c.Backend, key)
+}
+
+// Remove removes an entry from the cache
+func (c *MemoryCache) Remove(key string) {
+	c.mu.Lock()
+	c.removeNoLock(key)
 	c.mu.Unlock()
 }
 
