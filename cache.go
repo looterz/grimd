@@ -153,11 +153,7 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 		return CacheIsFull{}
 	}
 	if msg == nil {
-		log.Printf("Trying to set an empty value for key %s", key)
-		if Config.LogLevel > 1 {
-			panic("Empty cache value")
-		}
-		return nil
+		log.Printf("Setting an empty value for key %s", key)
 	}
 	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
@@ -211,6 +207,9 @@ func KeyGen(q Question) string {
 	h.Write([]byte(q.String()))
 	x := h.Sum(nil)
 	key := fmt.Sprintf("%x", x)
+	if Config.LogLevel > 1 {
+		log.Printf("KeyGen: %s %s", q.String(), key)
+	}
 	return key
 }
 
