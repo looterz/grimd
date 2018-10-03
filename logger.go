@@ -51,5 +51,6 @@ func LoggerInit(logFile string) (*os.File, error) {
 }
 
 var (
-	logger *logging.Logger = nil
+	// Initialize to a dummy but functional logger so that tested code has something to write to
+	logger *logging.Logger = logging.MustGetLogger("test")
 )
