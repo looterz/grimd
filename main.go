@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"runtime"
@@ -27,14 +26,14 @@ func main() {
 	flag.Parse()
 
 	if err := LoadConfig(configPath); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	QuestionCache.Maxcount = Config.QuestionCacheCap
 
 	logFile, err := LoggerInit(Config.Log)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	defer logFile.Close()
 
@@ -69,7 +68,7 @@ func main() {
 	server.Run(start_update)
 
 	if err := StartAPIServer(); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	sig := make(chan os.Signal)
@@ -79,7 +78,7 @@ forever:
 	for {
 		select {
 		case <-sig:
-			log.Printf("signal received, stopping\n")
+			logger.Error("signal received, stopping\n")
 			quit_activation <- true
 			break forever
 		}

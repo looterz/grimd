@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -45,21 +44,17 @@ func (r *Resolver) Lookup(net string, req *dns.Msg) (message *dns.Msg, err error
 		defer wg.Done()
 		r, _, err := c.Exchange(req, nameserver)
 		if err != nil {
-			log.Printf("%s socket error on %s", qname, nameserver)
-			log.Printf("error:%s", err.Error())
+			logger.Errorf("%s socket error on %s", qname, nameserver)
+			logger.Errorf("error:%s", err.Error())
 			return
 		}
 		if r != nil && r.Rcode != dns.RcodeSuccess {
-			if Config.LogLevel > 0 {
-				log.Printf("%s failed to get an valid answer on %s", qname, nameserver)
-			}
+			logger.Warningf("%s failed to get an valid answer on %s", qname, nameserver)
 			if r.Rcode == dns.RcodeServerFailure {
 				return
 			}
 		} else {
-			if Config.LogLevel > 0 {
-				log.Printf("%s resolv on %s (%s)\n", UnFqdn(qname), nameserver, net)
-			}
+			logger.Debugf("%s resolv on %s (%s)\n", UnFqdn(qname), nameserver, net)
 		}
 		select {
 		case res <- r:
