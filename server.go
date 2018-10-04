@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/miekg/dns"
@@ -44,9 +43,9 @@ func (s *Server) Run(update_lists chan bool) {
 }
 
 func (s *Server) start(ds *dns.Server) {
-	log.Printf("start %s listener on %s\n", ds.Net, s.host)
+	logger.Errorf("start %s listener on %s\n", ds.Net, s.host)
 
 	if err := ds.ListenAndServe(); err != nil {
-		log.Printf("start %s listener on %s failed: %s\n", ds.Net, s.host, err.Error())
+		logger.Errorf("start %s listener on %s failed: %s\n", ds.Net, s.host, err.Error())
 	}
 }

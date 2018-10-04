@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -73,7 +72,7 @@ func fetchSources() error {
 		fileName := fmt.Sprintf("%s.%d.list", host, timesSeen[host])
 
 		go func(uri string, name string) {
-			log.Printf("fetching source %s\n", uri)
+			logger.Debugf("fetching source %s\n", uri)
 			if err := downloadFile(uri, name); err != nil {
 				fmt.Println(err)
 			}
@@ -89,11 +88,11 @@ func fetchSources() error {
 
 // UpdateBlockCache updates the BlockCache
 func UpdateBlockCache(blockCache *MemoryBlockCache) error {
-	log.Printf("loading blocked domains from %d locations...\n", len(Config.SourceDirs))
+	logger.Debugf("loading blocked domains from %d locations...\n", len(Config.SourceDirs))
 
 	for _, dir := range Config.SourceDirs {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			log.Printf("directory %s not found, skipping\n", dir)
+			logger.Errorf("directory %s not found, skipping\n", dir)
 			continue
 		}
 
@@ -118,7 +117,7 @@ func UpdateBlockCache(blockCache *MemoryBlockCache) error {
 		}
 	}
 
-	log.Printf("%d domains loaded from sources\n", BlockCache.Length())
+	logger.Debugf("%d domains loaded from sources\n", BlockCache.Length())
 
 	return nil
 }
@@ -158,11 +157,11 @@ func PerformUpdate(forceUpdate bool) {
 	newBlockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
 	if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
 		if err := Update(newBlockCache); err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 	if err := UpdateBlockCache(newBlockCache); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	oldBlockCache := BlockCache

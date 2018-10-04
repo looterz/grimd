@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -111,16 +110,14 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	mesg, ok := c.Backend[key]
 	if ok && mesg.Msg == nil {
 		ok = false
-		log.Printf("Cache: key %s returned nil entry", key)
+		logger.Warningf("Cache: key %s returned nil entry", key)
 		c.removeNoLock(key)
 	}
 	if ok {
 		elapsed := uint32(now.Sub(mesg.LastUpdateTime).Seconds())
 		for _, answer := range mesg.Msg.Answer {
 			if elapsed > answer.Header().Ttl {
-				if Config.LogLevel > 1 {
-					log.Printf("Cache: Key expired %s", key)
-				}
+				logger.Debugf("Cache: Key expired %s", key)
 				c.removeNoLock(key)
 				expired = true
 			}
@@ -130,9 +127,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	c.mu.RUnlock()
 
 	if !ok {
-		if Config.LogLevel > 1 {
-			log.Printf("Cache: Cannot find key %s\n", key)
-		}
+		logger.Debugf("Cache: Cannot find key %s\n", key)
 		return nil, false, KeyNotFound{key}
 	}
 
@@ -153,7 +148,7 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 		return CacheIsFull{}
 	}
 	if msg == nil {
-		log.Printf("Setting an empty value for key %s", key)
+		logger.Debugf("Setting an empty value for key %s", key)
 	}
 	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
@@ -207,9 +202,7 @@ func KeyGen(q Question) string {
 	h.Write([]byte(q.String()))
 	x := h.Sum(nil)
 	key := fmt.Sprintf("%x", x)
-	if Config.LogLevel > 1 {
-		log.Printf("KeyGen: %s %s", q.String(), key)
-	}
+	logger.Debugf("KeyGen: %s %s", q.String(), key)
 	return key
 }
 

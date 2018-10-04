@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -130,7 +129,7 @@ func StartAPIServer() error {
 		return err
 	}
 
-	log.Println("API server listening on", Config.API)
+	logger.Critical("API server listening on", Config.API)
 
 	return nil
 }

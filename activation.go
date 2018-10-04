@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"time"
 )
 
@@ -17,7 +16,6 @@ type ActivationHandler struct {
 }
 
 func (a *ActivationHandler) loop(quit <-chan bool) {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	var reactivate time.Time
 	var reactivate_pending bool
 
@@ -39,7 +37,7 @@ forever:
 		case v := <-a.toggle_channel:
 			// Firefox is sending 2 queries in a row, so debouncing is needed.
 			if v.Mode == 1 && nextToggleTime.After(time.Now()) {
-				log.Print("Toggle is too close: wait 10 seconds\n")
+				logger.Warning("Toggle is too close: wait 10 seconds\n")
 			} else {
 				if v.Mode == 1 {
 					grimdActive = !grimdActive
@@ -62,7 +60,7 @@ forever:
 		case <-ticker:
 			now := time.Now()
 			if reactivate_pending && now.After(reactivate) {
-				log.Print("Reactivating grimd (timer)\n")
+				logger.Notice("Reactivating grimd (timer)")
 				grimdActive = true
 				reactivate_pending = false
 			}
