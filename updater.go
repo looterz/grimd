@@ -17,7 +17,7 @@ var timesSeen = make(map[string]int)
 var whitelist = make(map[string]bool)
 
 // Update downloads all of the blocklists and imports them into the database
-func Update(blockCache *MemoryBlockCache) error {
+func update(blockCache *MemoryBlockCache) error {
 	if _, err := os.Stat("sources"); os.IsNotExist(err) {
 		if err := os.Mkdir("sources", 0700); err != nil {
 			return fmt.Errorf("error creating sources directory: %s", err)
@@ -88,7 +88,7 @@ func fetchSources() error {
 }
 
 // UpdateBlockCache updates the BlockCache
-func UpdateBlockCache(blockCache *MemoryBlockCache) error {
+func updateBlockCache(blockCache *MemoryBlockCache) error {
 	log.Printf("loading blocked domains from %d locations...\n", len(Config.SourceDirs))
 
 	for _, dir := range Config.SourceDirs {
@@ -105,7 +105,7 @@ func UpdateBlockCache(blockCache *MemoryBlockCache) error {
 				}
 				defer file.Close()
 
-				if err = parseHostFile(file); err != nil {
+				if err = parseHostFile(file, blockCache); err != nil {
 					return fmt.Errorf("error parsing hostfile %s", err)
 				}
 			}
@@ -118,12 +118,12 @@ func UpdateBlockCache(blockCache *MemoryBlockCache) error {
 		}
 	}
 
-	log.Printf("%d domains loaded from sources\n", BlockCache.Length())
+	log.Printf("%d domains loaded from sources\n", blockCache.Length())
 
 	return nil
 }
 
-func parseHostFile(file *os.File) error {
+func parseHostFile(file *os.File, blockCache *MemoryBlockCache) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -139,8 +139,8 @@ func parseHostFile(file *os.File) error {
 				line = fields[0]
 			}
 
-			if !BlockCache.Exists(line) && !whitelist[line] {
-				BlockCache.Set(line, true)
+			if !blockCache.Exists(line) && !whitelist[line] {
+				blockCache.Set(line, true)
 			}
 		}
 	}
@@ -154,14 +154,14 @@ func parseHostFile(file *os.File) error {
 
 // Performs the update of the block cache by building a new cache and swapping
 // it for the old cache.
-func PerformUpdate(forceUpdate bool) {
+func PerformUpdate(forceUpdate bool, ) {
 	newBlockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
 	if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
-		if err := Update(newBlockCache); err != nil {
+		if err := update(newBlockCache); err != nil {
 			log.Fatal(err)
 		}
 	}
-	if err := UpdateBlockCache(newBlockCache); err != nil {
+	if err := updateBlockCache(newBlockCache); err != nil {
 		log.Fatal(err)
 	}
 
