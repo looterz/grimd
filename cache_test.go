@@ -14,8 +14,8 @@ import (
 
 func makeCache() MemoryCache {
 	return MemoryCache{
-		Backend:  make(map[string]*Mesg, Config.Maxcount),
-		Maxcount: Config.Maxcount,
+		Backend:  make(map[string]*Mesg, 0),
+		Maxcount: 0,
 	}
 }
 
@@ -122,8 +122,8 @@ func TestCacheTtl(t *testing.T) {
 
 	var attl uint32 = 10
 	var aaaattl uint32 = 20
-	nullroute := net.ParseIP(Config.Nullroute)
-	nullroutev6 := net.ParseIP(Config.Nullroutev6)
+	nullroute := net.ParseIP("0.0.0.0")
+	nullroutev6 := net.ParseIP("0::0")
 	a := &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   testDomain,
@@ -221,7 +221,7 @@ func TestCacheTtlFrequentPolling(t *testing.T) {
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
 	var attl uint32 = 10
-	nullroute := net.ParseIP(Config.Nullroute)
+	nullroute := net.ParseIP("0.0.0.0")
 	a := &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   testDomain,

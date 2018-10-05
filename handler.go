@@ -36,13 +36,22 @@ func (q *Question) String() string {
 
 // DNSHandler type
 type DNSHandler struct {
-	resolver *Resolver
-	cache    Cache
-	negCache Cache
-}
+	resolver          *Resolver
+	cache             Cache
+	negCache          Cache
+	toggleName        string
+	reactivationDelay uint
+	nullRoute         string
+	nullRouteV6       string
+	TTL               uint32
+	timeout           int
+	nameServers       []string
+	expire            uint32
+	interval		  int
+	}
 
 // NewHandler returns a new DNSHandler
-func NewHandler() *DNSHandler {
+func NewHandler(config *Config) *DNSHandler {
 	var (
 		clientConfig *dns.ClientConfig
 		resolver     *Resolver
@@ -53,16 +62,28 @@ func NewHandler() *DNSHandler {
 	resolver = &Resolver{clientConfig}
 
 	cache = &MemoryCache{
-		Backend:  make(map[string]*Mesg, Config.Maxcount),
-		Maxcount: Config.Maxcount,
+		Backend:  make(map[string]*Mesg, config.Maxcount),
+		Maxcount: config.Maxcount,
 	}
 	negCache = &MemoryCache{
 		Backend: make(map[string]*Mesg),
-		// Expire:   time.Duration(Config.Expire) * time.Second / 2,
-		Maxcount: Config.Maxcount,
+		Maxcount: config.Maxcount,
 	}
 
-	return &DNSHandler{resolver, cache, negCache}
+	return &DNSHandler{
+		resolver         : resolver, 
+		cache            : cache, 
+		negCache         : negCache,
+		toggleName       : config.ToggleName,
+		reactivationDelay: config.ReactivationDelay,
+		nullRoute        : config.Nullroute,
+		nullRouteV6      : config.Nullroutev6,
+		TTL              : config.TTL,
+		timeout			 : config.Timeout,
+		nameServers		 : config.Nameservers,
+		expire			 : config.Expire,
+		interval 		 : config.Interval,
+	}
 }
 
 func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
@@ -80,9 +101,9 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	logger.Infof("%s lookup　%s\n", remote, Q.String())
 
 	var grimdActive = grimdActivation.query()
-	if len(Config.ToggleName) > 0 && strings.Contains(Q.Qname, Config.ToggleName) {
+	if len(h.toggleName) > 0 && strings.Contains(Q.Qname, h.toggleName) {
 		logger.Noticef("Found ToggleName! (%s)\n", Q.Qname)
-		grimdActive = grimdActivation.toggle()
+		grimdActive = grimdActivation.toggle(h.reactivationDelay)
 
 		if grimdActive {
 			logger.Notice("Grimd Activated")
@@ -129,8 +150,8 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			m := new(dns.Msg)
 			m.SetReply(req)
 
-			nullroute := net.ParseIP(Config.Nullroute)
-			nullroutev6 := net.ParseIP(Config.Nullroutev6)
+			nullroute := net.ParseIP(h.nullRoute)
+			nullroutev6 := net.ParseIP(h.nullRouteV6)
 
 			switch IPQuery {
 			case _IP4Query:
@@ -138,7 +159,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 					Name:   q.Name,
 					Rrtype: dns.TypeA,
 					Class:  dns.ClassINET,
-					Ttl:    Config.TTL,
+					Ttl:    h.TTL,
 				}
 				a := &dns.A{Hdr: rrHeader, A: nullroute}
 				m.Answer = append(m.Answer, a)
@@ -147,7 +168,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 					Name:   q.Name,
 					Rrtype: dns.TypeAAAA,
 					Class:  dns.ClassINET,
-					Ttl:    Config.TTL,
+					Ttl:    h.TTL,
 				}
 				a := &dns.AAAA{Hdr: rrHeader, AAAA: nullroutev6}
 				m.Answer = append(m.Answer, a)
@@ -176,7 +197,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
 	go QuestionCache.Add(NewEntry)
 
-	mesg, err := h.resolver.Lookup(Net, req)
+	mesg, err := h.resolver.Lookup(Net, req, h.timeout, h.interval, h.nameServers)
 
 	if err != nil {
 		logger.Errorf("resolve query error %s\n", err)
@@ -190,7 +211,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	if mesg.Truncated && Net == "udp" {
-		mesg, err = h.resolver.Lookup("tcp", req)
+		mesg, err = h.resolver.Lookup("tcp", req, h.timeout, h.interval, h.nameServers)
 		if err != nil {
 			logger.Errorf("resolve tcp query error %s\n", err)
 			h.HandleFailed(w, req)
@@ -204,7 +225,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 	}
 
 	//find the smallest ttl
-	ttl := Config.Expire
+	ttl := h.expire
 	var candidate_ttl uint32 = 0
 
 	for index, answer := range mesg.Answer {

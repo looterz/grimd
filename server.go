@@ -14,8 +14,8 @@ type Server struct {
 }
 
 // Run starts the server
-func (s *Server) Run(update_lists chan bool) {
-	Handler := NewHandler()
+func (s *Server) Run(update_lists chan bool, config *Config) {
+	Handler := NewHandler(config)
 
 	tcpHandler := dns.NewServeMux()
 	tcpHandler.HandleFunc(".", Handler.DoTCP)

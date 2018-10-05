@@ -9,8 +9,8 @@ import (
 )
 
 // StartAPIServer launches the API server
-func StartAPIServer() error {
-	if Config.LogLevel == 0 {
+func StartAPIServer(config *Config) error {
+	if config.LogLevel == 0 {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -121,15 +121,15 @@ func StartAPIServer() error {
 	})
 
 	router.POST("/blocklist/update", func(c *gin.Context) {
-		PerformUpdate(true)
+		PerformUpdate(true, config)
 		c.AbortWithStatus(http.StatusOK)
 	})
 
-	if err := router.Run(Config.API); err != nil {
+	if err := router.Run(config.API); err != nil {
 		return err
 	}
 
-	logger.Critical("API server listening on", Config.API)
+	logger.Critical("API server listening on", config.API)
 
 	return nil
 }

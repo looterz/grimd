@@ -25,13 +25,14 @@ func main() {
 
 	flag.Parse()
 
-	if err := LoadConfig(configPath); err != nil {
+	config, err := LoadConfig(configPath)
+	if err != nil {
 		logger.Fatal(err)
 	}
 
-	QuestionCache.Maxcount = Config.QuestionCacheCap
+	QuestionCache.Maxcount = config.QuestionCacheCap
 
-	logFile, err := LoggerInit(Config.Log)
+	logFile, err := LoggerInit(config.LogLevel, config.Log)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -52,22 +53,22 @@ func main() {
 		if !run {
 			panic("The DNS server did not start in 10 seconds")
 		}
-		PerformUpdate(forceUpdate)
+		PerformUpdate(forceUpdate, config)
 	}()
 
 	grimdActive = true
 	quit_activation := make(chan bool)
-	go grimdActivation.loop(quit_activation)
+	go grimdActivation.loop(quit_activation, config.ReactivationDelay)
 
 	server := &Server{
-		host:     Config.Bind,
+		host:     config.Bind,
 		rTimeout: 5 * time.Second,
 		wTimeout: 5 * time.Second,
 	}
 
-	server.Run(start_update)
+	server.Run(start_update, config)
 
-	if err := StartAPIServer(); err != nil {
+	if err := StartAPIServer(config); err != nil {
 		logger.Fatal(err)
 	}
 

@@ -9,7 +9,7 @@ import (
 )
 
 // LoggerInit Initializes the logger
-func LoggerInit(logFile string) (*os.File, error) {
+func LoggerInit(logLevel int, logFile string) (*os.File, error) {
 	error_level := map[int]logging.Level{
 		0: logging.WARNING,
 		1: logging.INFO,
@@ -23,7 +23,7 @@ func LoggerInit(logFile string) (*os.File, error) {
 	stderr_formatter := logging.NewBackendFormatter(stderr_backend, format)
 	stderr_leveled := logging.AddModuleLevel(stderr_formatter)
 
-	stderr_leveled.SetLevel(error_level[Config.LogLevel], module_name)
+	stderr_leveled.SetLevel(error_level[logLevel], module_name)
 
 	if _, err := os.Stat(logFile); os.IsNotExist(err) {
 		if _, err := os.Create(logFile); err != nil {
@@ -43,7 +43,7 @@ func LoggerInit(logFile string) (*os.File, error) {
 	file_formatter := logging.NewBackendFormatter(file_backend, format)
 	file_leveled := logging.AddModuleLevel(file_formatter)
 
-	file_leveled.SetLevel(error_level[Config.LogLevel], module_name)
+	file_leveled.SetLevel(error_level[logLevel], module_name)
 
 	logging.SetBackend(stderr_leveled, file_leveled)
 

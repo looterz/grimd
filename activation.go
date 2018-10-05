@@ -15,7 +15,7 @@ type ActivationHandler struct {
 	set_channel    chan bool
 }
 
-func (a *ActivationHandler) loop(quit <-chan bool) {
+func (a *ActivationHandler) loop(quit <-chan bool, reactivationDelay uint) {
 	var reactivate time.Time
 	var reactivate_pending bool
 
@@ -45,7 +45,7 @@ forever:
 					grimdActive = false
 				}
 				nextToggleTime = time.Now().Add(time.Duration(10) * time.Second)
-				if !grimdActive && Config.ReactivationDelay > 0 {
+				if !grimdActive && reactivationDelay > 0 {
 					reactivate = time.Now().Add(time.Duration(v.Data) * time.Second)
 					reactivate_pending = true
 				} else {
@@ -81,10 +81,10 @@ func (a ActivationHandler) set(v bool) bool {
 }
 
 // Toggle activation state on or off
-func (a ActivationHandler) toggle() bool {
+func (a ActivationHandler) toggle(reactivationDelay uint) bool {
 	data := ToggleData{
 		Mode: 1,
-		Data: Config.ReactivationDelay,
+		Data: reactivationDelay,
 	}
 	a.toggle_channel <- data
 	return <-a.query_channel

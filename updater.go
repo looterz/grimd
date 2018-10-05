@@ -16,22 +16,22 @@ var timesSeen = make(map[string]int)
 var whitelist = make(map[string]bool)
 
 // Update downloads all of the blocklists and imports them into the database
-func update(blockCache *MemoryBlockCache) error {
+func update(blockCache *MemoryBlockCache, wlist []string, blist []string, sources []string) error {
 	if _, err := os.Stat("sources"); os.IsNotExist(err) {
 		if err := os.Mkdir("sources", 0700); err != nil {
 			return fmt.Errorf("error creating sources directory: %s", err)
 		}
 	}
 
-	for _, entry := range Config.Whitelist {
+	for _, entry := range wlist {
 		whitelist[entry] = true
 	}
 
-	for _, entry := range Config.Blocklist {
+	for _, entry := range blist {
 		blockCache.Set(entry, true)
 	}
 
-	if err := fetchSources(); err != nil {
+	if err := fetchSources(sources); err != nil {
 		return fmt.Errorf("error fetching sources: %s", err)
 	}
 
@@ -60,10 +60,10 @@ func downloadFile(uri string, name string) error {
 	return nil
 }
 
-func fetchSources() error {
+func fetchSources(sources []string) error {
 	var wg sync.WaitGroup
 
-	for _, uri := range Config.Sources {
+	for _, uri := range sources {
 		wg.Add(1)
 
 		u, _ := url.Parse(uri)
@@ -87,10 +87,10 @@ func fetchSources() error {
 }
 
 // UpdateBlockCache updates the BlockCache
-func updateBlockCache(blockCache *MemoryBlockCache) error {
-	logger.Debugf("loading blocked domains from %d locations...\n", len(Config.SourceDirs))
+func updateBlockCache(blockCache *MemoryBlockCache, sourceDirs []string) error {
+	logger.Debugf("loading blocked domains from %d locations...\n", len(sourceDirs))
 
-	for _, dir := range Config.SourceDirs {
+	for _, dir := range sourceDirs {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			logger.Errorf("directory %s not found, skipping\n", dir)
 			continue
@@ -153,14 +153,14 @@ func parseHostFile(file *os.File, blockCache *MemoryBlockCache) error {
 
 // Performs the update of the block cache by building a new cache and swapping
 // it for the old cache.
-func PerformUpdate(forceUpdate bool) {
+func PerformUpdate(forceUpdate bool, config *Config) {
 	newBlockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
 	if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
-		if err := update(newBlockCache); err != nil {
+		if err := update(newBlockCache, config.Whitelist, config.Blocklist, config.Sources); err != nil {
 			logger.Fatal(err)
 		}
 	}
-	if err := updateBlockCache(newBlockCache); err != nil {
+	if err := updateBlockCache(newBlockCache, config.SourceDirs); err != nil {
 		logger.Fatal(err)
 	}
 
