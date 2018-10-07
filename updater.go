@@ -133,7 +133,7 @@ func parseHostFile(fileName string, blockCache *MemoryBlockCache) error {
 		if len(line) > 0 {
 			fields := strings.Fields(line)
 
-			if len(fields) > 1 && !strings.HasPrefix(fields[1], "#") {
+			if len(fields) > 1 {
 				line = fields[1]
 			} else {
 				line = fields[0]
