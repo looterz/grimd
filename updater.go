@@ -154,7 +154,7 @@ func parseHostFile(fileName string, blockCache *MemoryBlockCache) error {
 
 // PerformUpdate updates the block cache by building a new one and swapping
 // it for the old cache.
-func PerformUpdate(forceUpdate bool, config *Config) {
+func PerformUpdate(forceUpdate bool, config *Config, blockCache *MemoryBlockCache) *MemoryBlockCache {
 	newBlockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
 	if _, err := os.Stat("lists"); os.IsNotExist(err) || forceUpdate {
 		if err := update(newBlockCache, config.Whitelist, config.Blocklist, config.Sources); err != nil {
@@ -165,10 +165,5 @@ func PerformUpdate(forceUpdate bool, config *Config) {
 		logger.Fatal(err)
 	}
 
-	oldBlockCache := BlockCache
-	oldBlockCache.mu.Lock()
-	newBlockCache.mu.Lock()
-	BlockCache = newBlockCache
-	newBlockCache.mu.Unlock()
-	oldBlockCache.mu.Unlock()
+	return newBlockCache
 }

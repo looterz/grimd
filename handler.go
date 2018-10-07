@@ -50,7 +50,7 @@ type DNSOperationData struct {
 }
 
 // NewHandler returns a new DNSHandler
-func NewHandler(config *Config) *DNSHandler {
+func NewHandler(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) *DNSHandler {
 	var (
 		clientConfig *dns.ClientConfig
 		resolver     *Resolver
@@ -76,15 +76,14 @@ func NewHandler(config *Config) *DNSHandler {
 		negCache:       negCache,
 	}
 
-	go handler.do(config)
+	go handler.do(config, blockCache, questionCache)
 
 	return handler
 }
 
-func (h *DNSHandler) do(config *Config) {
+func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) {
 	for {
 		data := <-h.requestChannel
-		logger.Debugf("New request: %s", data.req)
 		func(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			defer w.Close()
 			q := req.Question[0]
@@ -143,7 +142,7 @@ func (h *DNSHandler) do(config *Config) {
 			var blacklisted = false
 
 			if IPQuery > 0 {
-				blacklisted = BlockCache.Exists(Q.Qname)
+				blacklisted = blockCache.Exists(Q.Qname)
 
 				if grimdActive && blacklisted {
 					m := new(dns.Msg)
@@ -179,7 +178,7 @@ func (h *DNSHandler) do(config *Config) {
 
 					// log query
 					NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: true}
-					go QuestionCache.Add(NewEntry)
+					go questionCache.Add(NewEntry)
 
 					// cache the block; we don't know the true TTL for blocked entries: we just enforce our config
 					err := h.cache.Set(key, m, true)
@@ -194,7 +193,7 @@ func (h *DNSHandler) do(config *Config) {
 
 			// log query
 			NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
-			go QuestionCache.Add(NewEntry)
+			go questionCache.Add(NewEntry)
 
 			mesg, err := h.resolver.Lookup(Net, req, config.Timeout, config.Interval, config.Nameservers)
 
@@ -256,13 +255,11 @@ func (h *DNSHandler) do(config *Config) {
 
 // DoTCP begins a tcp query
 func (h *DNSHandler) DoTCP(w dns.ResponseWriter, req *dns.Msg) {
-	logger.Debugf("Sending tcp request %s", req)
 	h.requestChannel <- DNSOperationData{"tcp", w, req}
 }
 
 // DoUDP begins a udp query
 func (h *DNSHandler) DoUDP(w dns.ResponseWriter, req *dns.Msg) {
-	logger.Debugf("Sending udp request %s", req)
 	h.requestChannel <- DNSOperationData{"udp", w, req}
 }
 

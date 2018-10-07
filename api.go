@@ -9,7 +9,7 @@ import (
 )
 
 // StartAPIServer launches the API server
-func StartAPIServer(config *Config) error {
+func StartAPIServer(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) error {
 	if config.LogLevel == 0 {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -18,15 +18,15 @@ func StartAPIServer(config *Config) error {
 	router.Use(cors.Default())
 
 	router.GET("/blockcache", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length(), "items": BlockCache.Backend})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": blockCache.Length(), "items": blockCache.Backend})
 	})
 
 	router.GET("/blockcache/exists/:key", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"exists": BlockCache.Exists(c.Param("key"))})
+		c.IndentedJSON(http.StatusOK, gin.H{"exists": blockCache.Exists(c.Param("key"))})
 	})
 
 	router.GET("/blockcache/get/:key", func(c *gin.Context) {
-		if ok, _ := BlockCache.Get(c.Param("key")); !ok {
+		if ok, _ := blockCache.Get(c.Param("key")); !ok {
 			c.IndentedJSON(http.StatusOK, gin.H{"error": c.Param("key") + " not found"})
 		} else {
 			c.IndentedJSON(http.StatusOK, gin.H{"success": ok})
@@ -34,44 +34,44 @@ func StartAPIServer(config *Config) error {
 	})
 
 	router.GET("/blockcache/length", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length()})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": blockCache.Length()})
 	})
 
 	router.GET("/blockcache/remove/:key", func(c *gin.Context) {
 		// Removes from BlockCache only. If the domain has already been queried and placed into MemoryCache, will need to wait until item is expired.
-		BlockCache.Remove(c.Param("key"))
+		blockCache.Remove(c.Param("key"))
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/blockcache/set/:key", func(c *gin.Context) {
 		// MemoryBlockCache Set() always returns nil, so ignoring response.
-		_ = BlockCache.Set(c.Param("key"), true)
+		_ = blockCache.Set(c.Param("key"), true)
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/questioncache", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length(), "items": QuestionCache.Backend})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": questionCache.Length(), "items": questionCache.Backend})
 	})
 
 	router.GET("/questioncache/length", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length()})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": questionCache.Length()})
 	})
 
 	router.GET("/questioncache/clear", func(c *gin.Context) {
-		QuestionCache.Clear()
+		questionCache.Clear()
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/questioncache/client/:client", func(c *gin.Context) {
 		var filteredCache []QuestionCacheEntry
 
-		QuestionCache.mu.RLock()
-		for _, entry := range QuestionCache.Backend {
+		questionCache.mu.RLock()
+		for _, entry := range questionCache.Backend {
 			if entry.Remote == c.Param("client") {
 				filteredCache = append(filteredCache, entry)
 			}
 		}
-		QuestionCache.mu.RUnlock()
+		questionCache.mu.RUnlock()
 
 		c.IndentedJSON(http.StatusOK, filteredCache)
 	})
@@ -103,8 +103,8 @@ func StartAPIServer(config *Config) error {
 				grimdActivation.set(false)
 				c.IndentedJSON(http.StatusOK, gin.H{"active": grimdActive})
 			case "Snooze":
-				timeout_string := c.DefaultQuery("timeout", "300")
-				timeout, err := strconv.ParseUint(timeout_string, 0, 0)
+				timeoutString := c.DefaultQuery("timeout", "300")
+				timeout, err := strconv.ParseUint(timeoutString, 0, 0)
 				if err != nil {
 					c.JSON(http.StatusBadRequest, gin.H{"error": "Illegal value for 'timeout'"})
 				} else {
@@ -121,7 +121,9 @@ func StartAPIServer(config *Config) error {
 	})
 
 	router.POST("/blocklist/update", func(c *gin.Context) {
-		PerformUpdate(true, config)
+		here we need to regenerate everything by firing some signal to a channel
+		otherwise the pointers will be old
+ 		blockcache = PerformUpdate(true, config)
 		c.AbortWithStatus(http.StatusOK)
 	})
 

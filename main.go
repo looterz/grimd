@@ -13,15 +13,13 @@ var (
 	forceUpdate     bool
 	grimdActive     bool
 	grimdActivation ActivationHandler
-
-	// BlockCache contains all blocked domains
-	BlockCache = &MemoryBlockCache{Backend: make(map[string]bool)}
-
-	// QuestionCache contains all queries to the dns server
-	QuestionCache = &MemoryQuestionCache{Backend: make([]QuestionCacheEntry, 0), Maxcount: 1000}
 )
 
 func main() {
+	// BlockCache contains all blocked domains
+	blockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
+	// QuestionCache contains all queries to the dns server
+	questionCache := &MemoryQuestionCache{Backend: make([]QuestionCacheEntry, 0), Maxcount: 1000}
 
 	flag.Parse()
 
@@ -30,7 +28,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	QuestionCache.Maxcount = config.QuestionCacheCap
+	questionCache.Maxcount = config.QuestionCacheCap
 
 	logFile, err := LoggerInit(config.LogLevel, config.Log)
 	if err != nil {
@@ -39,17 +37,17 @@ func main() {
 	defer logFile.Close()
 
 	// delay updating the blocklists, cache until the server starts and can serve requests as the local resolver
-	start_update := make(chan bool, 1)
+	startUpdate := make(chan bool, 1)
 
 	//abort if the server does not come up in 10 seconds
 	timer := time.NewTimer(time.Second * 10)
 	go func() {
 		<-timer.C
-		start_update <- false
+		startUpdate <- false
 	}()
 
 	go func() {
-		run := <-start_update
+		run := <-startUpdate
 		if !run {
 			panic("The DNS server did not start in 10 seconds")
 		}
@@ -57,8 +55,8 @@ func main() {
 	}()
 
 	grimdActive = true
-	quit_activation := make(chan bool)
-	go grimdActivation.loop(quit_activation, config.ReactivationDelay)
+	quitActivation := make(chan bool)
+	go grimdActivation.loop(quitActivation, config.ReactivationDelay)
 
 	server := &Server{
 		host:     config.Bind,
@@ -66,9 +64,9 @@ func main() {
 		wTimeout: 5 * time.Second,
 	}
 
-	server.Run(start_update, config)
+	server.Run(startUpdate, config, blockCache, questionCache)
 
-	if err := StartAPIServer(config); err != nil {
+	if err := StartAPIServer(config, blockCache, questionCache); err != nil {
 		logger.Fatal(err)
 	}
 
@@ -80,7 +78,7 @@ forever:
 		select {
 		case <-sig:
 			logger.Error("signal received, stopping\n")
-			quit_activation <- true
+			quitActivation <- true
 			break forever
 		}
 	}
