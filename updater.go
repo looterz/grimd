@@ -98,13 +98,9 @@ func updateBlockCache(blockCache *MemoryBlockCache, sourceDirs []string) error {
 
 		err := filepath.Walk(dir, func(path string, f os.FileInfo, _ error) error {
 			if !f.IsDir() {
-				file, err := os.Open(filepath.FromSlash(path))
-				if err != nil {
-					return fmt.Errorf("error opening file: %s", err)
-				}
-				defer file.Close()
+				fileName := filepath.FromSlash(path)
 
-				if err = parseHostFile(file, blockCache); err != nil {
+				if err := parseHostFile(fileName, blockCache); err != nil {
 					return fmt.Errorf("error parsing hostfile %s", err)
 				}
 			}
@@ -122,14 +118,19 @@ func updateBlockCache(blockCache *MemoryBlockCache, sourceDirs []string) error {
 	return nil
 }
 
-func parseHostFile(file *os.File, blockCache *MemoryBlockCache) error {
+func parseHostFile(fileName string, blockCache *MemoryBlockCache) error {
+	file, err := os.Open(fileName)
+	if err != nil {
+		return fmt.Errorf("error opening file: %s", err)
+	}
+	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
+		line = strings.Split(line, "#")[0]
 		line = strings.TrimSpace(line)
-		isComment := strings.HasPrefix(line, "#")
 
-		if !isComment && line != "" {
+		if len(line) > 0 {
 			fields := strings.Fields(line)
 
 			if len(fields) > 1 && !strings.HasPrefix(fields[1], "#") {
