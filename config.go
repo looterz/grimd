@@ -18,6 +18,7 @@ var BuildVersion = "1.0.5"
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
 var ConfigVersion = "1.0.2"
 
+// Config holds the configuration parameters
 type Config struct {
 	Version           string
 	Sources           []string

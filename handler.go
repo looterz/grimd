@@ -141,7 +141,7 @@ func (h *DNSHandler) do(Net string, w dns.ResponseWriter, req *dns.Msg) {
 		}
 	}
 	// Check blocklist
-	var blacklisted bool = false
+	var blacklisted = false
 
 	if IPQuery > 0 {
 		blacklisted = BlockCache.Exists(Q.Qname)
