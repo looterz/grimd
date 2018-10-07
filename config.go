@@ -142,7 +142,7 @@ func LoadConfig(path string) (*Config, error) {
 		log.Printf("grimd v%s\n", BuildVersion)
 	}
 
-	return &config,  nil
+	return &config, nil
 }
 
 func generateConfig(path string) error {

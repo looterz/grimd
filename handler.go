@@ -47,8 +47,8 @@ type DNSHandler struct {
 	timeout           int
 	nameServers       []string
 	expire            uint32
-	interval		  int
-	}
+	interval          int
+}
 
 // NewHandler returns a new DNSHandler
 func NewHandler(config *Config) *DNSHandler {
@@ -66,23 +66,23 @@ func NewHandler(config *Config) *DNSHandler {
 		Maxcount: config.Maxcount,
 	}
 	negCache = &MemoryCache{
-		Backend: make(map[string]*Mesg),
+		Backend:  make(map[string]*Mesg),
 		Maxcount: config.Maxcount,
 	}
 
 	return &DNSHandler{
-		resolver         : resolver, 
-		cache            : cache, 
-		negCache         : negCache,
-		toggleName       : config.ToggleName,
+		resolver:          resolver,
+		cache:             cache,
+		negCache:          negCache,
+		toggleName:        config.ToggleName,
 		reactivationDelay: config.ReactivationDelay,
-		nullRoute        : config.Nullroute,
-		nullRouteV6      : config.Nullroutev6,
-		TTL              : config.TTL,
-		timeout			 : config.Timeout,
-		nameServers		 : config.Nameservers,
-		expire			 : config.Expire,
-		interval 		 : config.Interval,
+		nullRoute:         config.Nullroute,
+		nullRouteV6:       config.Nullroutev6,
+		TTL:               config.TTL,
+		timeout:           config.Timeout,
+		nameServers:       config.Nameservers,
+		expire:            config.Expire,
+		interval:          config.Interval,
 	}
 }
 

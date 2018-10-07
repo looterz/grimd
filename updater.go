@@ -109,7 +109,7 @@ func updateBlockCache(blockCache *MemoryBlockCache, sourceDirs []string) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("error walking location %s\n", err)
+			return fmt.Errorf("error walking location %s", err)
 		}
 	}
 
@@ -152,7 +152,7 @@ func parseHostFile(fileName string, blockCache *MemoryBlockCache) error {
 	return nil
 }
 
-// Performs the update of the block cache by building a new cache and swapping
+// PerformUpdate updates the block cache by building a new one and swapping
 // it for the old cache.
 func PerformUpdate(forceUpdate bool, config *Config) {
 	newBlockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
