@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"net/http"
 	"strconv"
 
@@ -8,13 +9,21 @@ import (
 	"gopkg.in/gin-contrib/cors.v1"
 )
 
-// StartAPIServer launches the API server
-func StartAPIServer(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) error {
+// StartAPIServer starts the API server
+func StartAPIServer(config *Config,
+	reloadChan chan bool,
+	blockCache *MemoryBlockCache,
+	questionCache *MemoryQuestionCache) (*http.Server, error) {
 	if config.LogLevel == 0 {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.Default()
+	server := &http.Server{
+		Addr:    config.API,
+		Handler: router,
+	}
+
 	router.Use(cors.Default())
 
 	router.GET("/blockcache", func(c *gin.Context) {
@@ -121,17 +130,20 @@ func StartAPIServer(config *Config, blockCache *MemoryBlockCache, questionCache 
 	})
 
 	router.POST("/blocklist/update", func(c *gin.Context) {
-		here we need to regenerate everything by firing some signal to a channel
-		otherwise the pointers will be old
- 		blockcache = PerformUpdate(true, config)
 		c.AbortWithStatus(http.StatusOK)
+		reloadChan <- true
 	})
 
-	if err := router.Run(config.API); err != nil {
-		return err
+	listener, err := net.Listen("tcp", config.API)
+	if err != nil {
+		return nil, err
 	}
+	go func() {
+		if err := server.Serve(listener); err != http.ErrServerClosed {
+			logger.Fatal(err)
+		}
+	}()
 
-	logger.Critical("API server listening on", config.API)
-
-	return nil
+	logger.Criticalf("API server listening on %s", config.API)
+	return server, err
 }

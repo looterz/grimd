@@ -83,7 +83,10 @@ func NewHandler(config *Config, blockCache *MemoryBlockCache, questionCache *Mem
 
 func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) {
 	for {
-		data := <-h.requestChannel
+		data, ok := <-h.requestChannel
+		if !ok {
+			break
+		}
 		func(Net string, w dns.ResponseWriter, req *dns.Msg) {
 			defer w.Close()
 			q := req.Question[0]
