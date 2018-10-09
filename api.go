@@ -14,7 +14,7 @@ func StartAPIServer(config *Config,
 	reloadChan chan bool,
 	blockCache *MemoryBlockCache,
 	questionCache *MemoryQuestionCache) (*http.Server, error) {
-	if config.LogLevel == 0 {
+	if config.LogLevel < 2 {
 		gin.SetMode(gin.ReleaseMode)
 	}
 

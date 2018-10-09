@@ -17,7 +17,7 @@ type Server struct {
 }
 
 // Run starts the server
-func (s *Server) Run(updateLists chan bool, config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) {
+func (s *Server) Run(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) {
 	s.handler = NewHandler(config, blockCache, questionCache)
 
 	tcpHandler := dns.NewServeMux()
@@ -41,8 +41,6 @@ func (s *Server) Run(updateLists chan bool, config *Config, blockCache *MemoryBl
 
 	go s.start(s.udpServer)
 	go s.start(s.tcpServer)
-
-	updateLists <- true
 }
 
 func (s *Server) start(ds *dns.Server) {

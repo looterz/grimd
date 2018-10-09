@@ -5,7 +5,6 @@ import (
 	"flag"
 	"net/http"
 	"os"
-	"os/signal"
 	"runtime"
 	"time"
 )
@@ -16,6 +15,28 @@ var (
 	grimdActive     bool
 	grimdActivation ActivationHandler
 )
+
+func reloadBlockCache(config *Config,
+	blockCache *MemoryBlockCache,
+	questionCache *MemoryQuestionCache,
+	apiServer *http.Server,
+	server *Server,
+	reloadChan chan bool) (*MemoryBlockCache, *http.Server, error) {
+	logger.Debug("Reloading the blockcache")
+	blockCache = PerformUpdate(config, true)
+	server.Stop()
+	if apiServer != nil {
+		apiServer.Shutdown(context.Background())
+	}
+	server.Run(config, blockCache, questionCache)
+	apiServer, err := StartAPIServer(config, reloadChan, blockCache, questionCache)
+	if err != nil {
+		logger.Fatal(err)
+		return nil, nil, err
+	}
+
+	return blockCache, apiServer, nil
+}
 
 func main() {
 
@@ -31,16 +52,6 @@ func main() {
 		logger.Fatal(err)
 	}
 	defer logFile.Close()
-
-	// delay updating the blocklists, cache until the server starts and can serve requests as the local resolver
-	startUpdate := make(chan bool, 1)
-
-	//abort if the server does not come up in 10 seconds
-	timer := time.NewTimer(time.Second * 10)
-	go func() {
-		<-timer.C
-		startUpdate <- false
-	}()
 
 	grimdActive = true
 	quitActivation := make(chan bool)
@@ -60,21 +71,19 @@ func main() {
 
 	reloadChan := make(chan bool)
 
-	var apiServer *http.Server
-	go func() {
-		run := <-startUpdate
-		if !run {
-			panic("The DNS server did not start in 10 seconds")
-		}
-		reloadChan <- true
-	}()
+	// The server will start with an empty blockcache soe we can dowload the lists if grimd is the
+	// system's dns server.
+	server.Run(config, blockCache, questionCache)
 
-	// The server will start with an empty blockcache and then trigger an update
-	// via the `startUpdate` channel.
-	server.Run(startUpdate, config, blockCache, questionCache)
+	var apiServer *http.Server
+	// Load the block cache, restart the server with the new context
+	blockCache, apiServer, err = reloadBlockCache(config, blockCache, questionCache, apiServer, server, reloadChan)
+
+	if err != nil {
+		logger.Fatalf("Cannot start the API server %s", err)
+	}
 
 	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt)
 
 forever:
 	for {
@@ -84,16 +93,9 @@ forever:
 			quitActivation <- true
 			break forever
 		case <-reloadChan:
-			logger.Debug("Reloading the blockcache")
-			blockCache = PerformUpdate(config, true)
-			server.Stop()
-			if apiServer != nil {
-				apiServer.Shutdown(context.Background())
-			}
-			server.Run(startUpdate, config, blockCache, questionCache)
-			apiServer, err = StartAPIServer(config, reloadChan, blockCache, questionCache)
+			blockCache, apiServer, err = reloadBlockCache(config, blockCache, questionCache, apiServer, server, reloadChan)
 			if err != nil {
-				logger.Fatal(err)
+				logger.Fatalf("Cannot start the API server %s", err)
 			}
 		}
 	}
