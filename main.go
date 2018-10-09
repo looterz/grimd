@@ -39,11 +39,6 @@ func reloadBlockCache(config *Config,
 }
 
 func main() {
-	// BlockCache contains all blocked domains
-	blockCache := &MemoryBlockCache{Backend: make(map[string]bool)}
-	// QuestionCache contains all queries to the dns server
-	questionCache := &MemoryQuestionCache{Backend: make([]QuestionCacheEntry, 0), Maxcount: 1000}
-
 	flag.Parse()
 
 	config, err := LoadConfig(configPath)

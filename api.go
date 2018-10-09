@@ -9,18 +9,12 @@ import (
 	"gopkg.in/gin-contrib/cors.v1"
 )
 
-<<<<<<< HEAD
 // StartAPIServer starts the API server
 func StartAPIServer(config *Config,
 	reloadChan chan bool,
 	blockCache *MemoryBlockCache,
 	questionCache *MemoryQuestionCache) (*http.Server, error) {
 	if config.LogLevel < 2 {
-=======
-// StartAPIServer launches the API server
-func StartAPIServer(config *Config, blockCache *MemoryBlockCache, questionCache *MemoryQuestionCache) error {
-	if config.LogLevel == 0 {
->>>>>>> 23967dfdc40cde995257c350b7a2dce282953e73
 		gin.SetMode(gin.ReleaseMode)
 	}
 
