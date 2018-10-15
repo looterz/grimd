@@ -106,7 +106,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	now := WallClock.Now().Truncate(time.Second)
 
 	expired := false
-	c.mu.RLock()
+	c.mu.Lock()
 	mesg, ok := c.Backend[key]
 	if ok && mesg.Msg == nil {
 		ok = false
@@ -124,7 +124,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 			answer.Header().Ttl -= elapsed
 		}
 	}
-	c.mu.RUnlock()
+	c.mu.Unlock()
 
 	if !ok {
 		logger.Debugf("Cache: Cannot find key %s\n", key)

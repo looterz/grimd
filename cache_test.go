@@ -256,3 +256,37 @@ func TestCacheTtlFrequentPolling(t *testing.T) {
 	cache.Remove(testDomain)
 
 }
+
+func TestExpirationRace(t *testing.T) {
+	cache := makeCache()
+	fakeClock := clockwork.NewFakeClock()
+	WallClock = fakeClock
+
+	const testDomain = "www.domain.com"
+
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
+
+	nullroute := net.ParseIP(Config.Nullroute)
+	a := &dns.A{
+		Hdr: dns.RR_Header{
+			Name:   testDomain,
+			Rrtype: dns.TypeA,
+			Class:  dns.ClassINET,
+			Ttl:    1,
+		},
+		A: nullroute}
+	m.Answer = append(m.Answer, a)
+
+	//log.Printf("Adding %s with TTL %d\n", testDomain, attl)
+
+	if err := cache.Set(testDomain, m, true); err != nil {
+		t.Error(err)
+	}
+
+	for i := 0; i < 1000; i++ {
+		fakeClock.Advance(time.Duration(100) * time.Millisecond)
+		go cache.Get(testDomain)
+		go cache.Set(testDomain, m, true)
+	}
+}
