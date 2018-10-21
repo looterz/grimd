@@ -4,24 +4,26 @@ import (
 	"time"
 )
 
+// ToggleData type
 type ToggleData struct {
 	Mode uint
 	Data uint
 }
 
+// ActivationHandler type
 type ActivationHandler struct {
-	query_channel  chan bool
-	toggle_channel chan ToggleData
-	set_channel    chan bool
+	queryChannel  chan bool
+	toggleChannel chan ToggleData
+	setChannel    chan bool
 }
 
-func (a *ActivationHandler) loop(quit <-chan bool) {
+func (a *ActivationHandler) loop(quit <-chan bool, reactivationDelay uint) {
 	var reactivate time.Time
-	var reactivate_pending bool
+	var reactivatePending bool
 
-	a.query_channel = make(chan bool)
-	a.toggle_channel = make(chan ToggleData)
-	a.set_channel = make(chan bool)
+	a.queryChannel = make(chan bool)
+	a.toggleChannel = make(chan ToggleData)
+	a.setChannel = make(chan bool)
 
 	ticker := time.Tick(1 * time.Second)
 
@@ -32,9 +34,9 @@ forever:
 		select {
 		case <-quit:
 			break forever
-		case <-a.query_channel:
-			a.query_channel <- grimdActive
-		case v := <-a.toggle_channel:
+		case <-a.queryChannel:
+			a.queryChannel <- grimdActive
+		case v := <-a.toggleChannel:
 			// Firefox is sending 2 queries in a row, so debouncing is needed.
 			if v.Mode == 1 && nextToggleTime.After(time.Now()) {
 				logger.Warning("Toggle is too close: wait 10 seconds\n")
@@ -45,24 +47,24 @@ forever:
 					grimdActive = false
 				}
 				nextToggleTime = time.Now().Add(time.Duration(10) * time.Second)
-				if !grimdActive && Config.ReactivationDelay > 0 {
+				if !grimdActive && reactivationDelay > 0 {
 					reactivate = time.Now().Add(time.Duration(v.Data) * time.Second)
-					reactivate_pending = true
+					reactivatePending = true
 				} else {
-					reactivate_pending = false
+					reactivatePending = false
 				}
-				a.query_channel <- grimdActive
+				a.queryChannel <- grimdActive
 			}
-		case v := <-a.set_channel:
+		case v := <-a.setChannel:
 			grimdActive = v
-			reactivate_pending = false
-			a.set_channel <- grimdActive
+			reactivatePending = false
+			a.setChannel <- grimdActive
 		case <-ticker:
 			now := time.Now()
-			if reactivate_pending && now.After(reactivate) {
+			if reactivatePending && now.After(reactivate) {
 				logger.Notice("Reactivating grimd (timer)")
 				grimdActive = true
-				reactivate_pending = false
+				reactivatePending = false
 			}
 		}
 	}
@@ -70,32 +72,32 @@ forever:
 
 // Query activation state
 func (a ActivationHandler) query() bool {
-	a.query_channel <- true
-	return <-a.query_channel
+	a.queryChannel <- true
+	return <-a.queryChannel
 }
 
 // Set activation state
 func (a ActivationHandler) set(v bool) bool {
-	a.set_channel <- v
-	return <-a.set_channel
+	a.setChannel <- v
+	return <-a.setChannel
 }
 
 // Toggle activation state on or off
-func (a ActivationHandler) toggle() bool {
+func (a ActivationHandler) toggle(reactivationDelay uint) bool {
 	data := ToggleData{
 		Mode: 1,
-		Data: Config.ReactivationDelay,
+		Data: reactivationDelay,
 	}
-	a.toggle_channel <- data
-	return <-a.query_channel
+	a.toggleChannel <- data
+	return <-a.queryChannel
 }
 
 // Like toggle(), but only from on to off. Toggling when off will restart the
 // timer.
 func (a ActivationHandler) toggleOff(timeout uint) bool {
-	a.toggle_channel <- ToggleData{
+	a.toggleChannel <- ToggleData{
 		Mode: 2,
 		Data: timeout,
 	}
-	return <-a.query_channel
+	return <-a.queryChannel
 }

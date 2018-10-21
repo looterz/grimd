@@ -1,0 +1,15 @@
+# a comment
+domain1.some
+111.22.3.1 domain.with.number
+111.22.3.2  domain.2.with.number
+        domain.with.tab
+        domain.with.spaces
+                                                                                                                                domain.with.many.spaces
+domain.with.comment # so here is a comment
+
+111.22.3.3  domain.with.number.and.comment # some other comment
+
+# another comment
+
+domain.with.attached.comment#cheek2cheek
+111.22.3.4 domain.with.number.and.attached.comment#cheek2cheek
