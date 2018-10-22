@@ -260,7 +260,7 @@ func TestExpirationRace(t *testing.T) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
-	nullroute := net.ParseIP(Config.Nullroute)
+	nullroute := net.ParseIP("0.0.0.0")
 	a := &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   testDomain,
