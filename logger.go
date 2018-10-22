@@ -10,20 +10,20 @@ import (
 
 // LoggerInit Initializes the logger
 func LoggerInit(logLevel int, logFile string) (*os.File, error) {
-	error_level := map[int]logging.Level{
+	errorLevel := map[int]logging.Level{
 		0: logging.WARNING,
 		1: logging.INFO,
 		2: logging.DEBUG,
 	}
-	const module_name = "grimd"
-	logger = logging.MustGetLogger(module_name)
+	const moduleName = "grimd"
+	logger = logging.MustGetLogger(moduleName)
 	var format = logging.MustStringFormatter(
 		`%{color}%{time:15:04:05.000} %{level:.4s} %{shortfile} ▶ %{id:03x}%{color:reset} %{message}`)
-	stderr_backend := logging.NewLogBackend(os.Stderr, "", 0)
-	stderr_formatter := logging.NewBackendFormatter(stderr_backend, format)
-	stderr_leveled := logging.AddModuleLevel(stderr_formatter)
+	stderrBackend := logging.NewLogBackend(os.Stderr, "", 0)
+	stderrFormatter := logging.NewBackendFormatter(stderrBackend, format)
+	stderrLeveled := logging.AddModuleLevel(stderrFormatter)
 
-	stderr_leveled.SetLevel(error_level[logLevel], module_name)
+	stderrLeveled.SetLevel(errorLevel[logLevel], moduleName)
 
 	if _, err := os.Stat(logFile); os.IsNotExist(err) {
 		if _, err := os.Create(logFile); err != nil {
@@ -38,19 +38,19 @@ func LoggerInit(logLevel int, logFile string) (*os.File, error) {
 
 	format = logging.MustStringFormatter(
 		`%{time:15:04:05.000} %{level:.4s} %{shortfile} ▶ %{id:03x} %{message}`)
-	file_writer := io.Writer(file)
-	file_backend := logging.NewLogBackend(file_writer, "", 0)
-	file_formatter := logging.NewBackendFormatter(file_backend, format)
-	file_leveled := logging.AddModuleLevel(file_formatter)
+	fileWriter := io.Writer(file)
+	fileBackend := logging.NewLogBackend(fileWriter, "", 0)
+	fileFormatter := logging.NewBackendFormatter(fileBackend, format)
+	fileLeveled := logging.AddModuleLevel(fileFormatter)
 
-	file_leveled.SetLevel(error_level[logLevel], module_name)
+	fileLeveled.SetLevel(errorLevel[logLevel], moduleName)
 
-	logging.SetBackend(stderr_leveled, file_leveled)
+	logging.SetBackend(stderrLeveled, fileLeveled)
 
 	return file, nil
 }
 
 var (
 	// Initialize to a dummy but functional logger so that tested code has something to write to
-	logger *logging.Logger = logging.MustGetLogger("test")
+	logger = logging.MustGetLogger("test")
 )
