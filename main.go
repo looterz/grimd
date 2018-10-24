@@ -46,11 +46,10 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	logFile, err := LoggerInit(config.LogLevel, config.Log)
-	if err != nil {
-		logger.Fatal(err)
+	files := LoggerInit(config)
+	for _, file := range files {
+		defer file.Close()
 	}
-	defer logFile.Close()
 
 	grimdActive = true
 	quitActivation := make(chan bool)

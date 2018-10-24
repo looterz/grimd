@@ -16,14 +16,14 @@ import (
 var BuildVersion = "1.0.5"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.2"
+var ConfigVersion = "1.0.3"
 
 // Config holds the configuration parameters
 type Config struct {
 	Version           string
 	Sources           []string
 	SourceDirs        []string
-	Log               string
+	LogConfig         string
 	LogLevel          int
 	Bind              string
 	API               string
@@ -63,7 +63,7 @@ sourcedirs = [
 ]
 
 # location of the log file
-log = "grimd.log"
+logconfig = "stderr,file:grimd.log"
 
 # what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
 loglevel = 0
