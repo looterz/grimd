@@ -4,20 +4,20 @@ import (
 	"time"
 )
 
-// ToggleData type
+// ToggleData type holds the data for the activation toggle channel
 type ToggleData struct {
 	Mode uint
 	Data uint
 }
 
-// ActivationHandler type
+// ActivationHandler type holds the machinery for toggling grimd on and off
 type ActivationHandler struct {
 	queryChannel  chan bool
 	toggleChannel chan ToggleData
 	setChannel    chan bool
 }
 
-func (a *ActivationHandler) loop(quit <-chan bool, reactivationDelay uint) {
+func (a *ActivationHandler) loop(quit <-chan bool) {
 	var reactivate time.Time
 	var reactivatePending bool
 
@@ -47,7 +47,7 @@ forever:
 					grimdActive = false
 				}
 				nextToggleTime = time.Now().Add(time.Duration(10) * time.Second)
-				if !grimdActive && reactivationDelay > 0 {
+				if !grimdActive && Config.ReactivationDelay > 0 {
 					reactivate = time.Now().Add(time.Duration(v.Data) * time.Second)
 					reactivatePending = true
 				} else {
@@ -83,10 +83,10 @@ func (a ActivationHandler) set(v bool) bool {
 }
 
 // Toggle activation state on or off
-func (a ActivationHandler) toggle(reactivationDelay uint) bool {
+func (a ActivationHandler) toggle() bool {
 	data := ToggleData{
 		Mode: 1,
-		Data: reactivationDelay,
+		Data: Config.ReactivationDelay,
 	}
 	a.toggleChannel <- data
 	return <-a.queryChannel

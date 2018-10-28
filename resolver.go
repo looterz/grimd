@@ -29,12 +29,11 @@ type Resolver struct {
 // Lookup will ask each nameserver in top-to-bottom fashion, starting a new request
 // in every second, and return as early as possbile (have an answer).
 // It returns an error if no request has succeeded.
-func (r *Resolver) Lookup(net string, req *dns.Msg, timeout int, interval int, nameServers []string) (message *dns.Msg, err error) {
-	logger.Debugf("Lookup %s, timeout: %d, interval: %d, nameservers: %v", net, timeout, interval, nameServers)
+func (r *Resolver) Lookup(net string, req *dns.Msg) (message *dns.Msg, err error) {
 	c := &dns.Client{
 		Net:          net,
-		ReadTimeout:  r.Timeout(timeout),
-		WriteTimeout: r.Timeout(timeout),
+		ReadTimeout:  r.Timeout(),
+		WriteTimeout: r.Timeout(),
 	}
 
 	qname := req.Question[0].Name
@@ -63,13 +62,13 @@ func (r *Resolver) Lookup(net string, req *dns.Msg, timeout int, interval int, n
 		}
 	}
 
-	ticker := time.NewTicker(time.Duration(interval) * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(Config.Interval) * time.Millisecond)
 	defer ticker.Stop()
 
 	// Start lookup on each nameserver top-down, in every second
-	for _, nameServer := range nameServers {
+	for _, nameserver := range r.Nameservers() {
 		wg.Add(1)
-		go L(nameServer)
+		go L(nameserver)
 		// but exit early, if we have an answer
 		select {
 		case r := <-res:
@@ -85,11 +84,16 @@ func (r *Resolver) Lookup(net string, req *dns.Msg, timeout int, interval int, n
 	case r := <-res:
 		return r, nil
 	default:
-		return nil, ResolvError{qname, net, nameServers}
+		return nil, ResolvError{qname, net, r.Nameservers()}
 	}
 }
 
+// Nameservers return the array of nameservers
+func (r *Resolver) Nameservers() (ns []string) {
+	return Config.Nameservers
+}
+
 // Timeout returns the resolver timeout
-func (r *Resolver) Timeout(timeout int) time.Duration {
-	return time.Duration(timeout) * time.Second
+func (r *Resolver) Timeout() time.Duration {
+	return time.Duration(Config.Timeout) * time.Second
 }

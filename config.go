@@ -18,13 +18,11 @@ var BuildVersion = "1.0.5"
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
 var ConfigVersion = "1.0.3"
 
-// Config holds the configuration parameters
-type Config struct {
+type config struct {
 	Version           string
 	Sources           []string
 	SourceDirs        []string
 	LogConfig         string
-	LogLevel          int
 	Bind              string
 	API               string
 	Nullroute         string
@@ -40,6 +38,7 @@ type Config struct {
 	Whitelist         []string
 	ToggleName        string
 	ReactivationDelay uint
+	APIDebug          bool
 }
 
 var defaultConfig = `# version this config was generated from
@@ -62,11 +61,16 @@ sourcedirs = [
 "sources"
 ]
 
-# location of the log file
-logconfig = "stderr,file:grimd.log"
+# log configuration
+# format: comma separated list of options, where options is one of 
+#   file:<filename>@<loglevel>
+#   stderr>@<loglevel>
+#   syslog@<loglevel>
+# loglevel: 0 = errors and important operations, 1 = dns queries, 2 = debug
+logconfig = "file:grimd.log@2,syslog@1,stderr@2"
 
-# what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
-loglevel = 0
+# apidebug enables the debug mode of the http api library
+apidebug = false
 
 # address to bind to for the DNS server
 bind = "0.0.0.0:53"
@@ -118,32 +122,32 @@ reactivationdelay = 300
 // WallClock is the wall clock
 var WallClock = clockwork.NewRealClock()
 
+// Config is the global configuration
+var Config config
+
 // LoadConfig loads the given config file
-func LoadConfig(path string) (*Config, error) {
-
-	var config Config
-
+func LoadConfig(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if err := generateConfig(path); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	if _, err := toml.DecodeFile(path, &config); err != nil {
-		return nil, fmt.Errorf("could not load config: %s", err)
+	if _, err := toml.DecodeFile(path, &Config); err != nil {
+		return fmt.Errorf("could not load config: %s", err)
 	}
 
-	if config.Version != ConfigVersion {
-		if config.Version == "" {
-			config.Version = "none"
+	if Config.Version != ConfigVersion {
+		if Config.Version == "" {
+			Config.Version = "none"
 		}
 
-		log.Printf("warning, grimd.toml is out of date!\nconfig v%s\ngrimd config v%s\ngrimd v%s\nplease update your config\n", config.Version, ConfigVersion, BuildVersion)
+		log.Printf("warning, grimd.toml is out of date!\nconfig v%s\ngrimd config v%s\ngrimd v%s\nplease update your config\n", Config.Version, ConfigVersion, BuildVersion)
 	} else {
 		log.Printf("grimd v%s\n", BuildVersion)
 	}
 
-	return &config, nil
+	return nil
 }
 
 func generateConfig(path string) error {

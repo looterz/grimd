@@ -12,6 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func makeCache() MemoryCache {
+	return MemoryCache{
+		Backend:  make(map[string]*Mesg, Config.Maxcount),
+		Maxcount: Config.Maxcount,
+	}
+}
+
 func TestCache(t *testing.T) {
 	const (
 		testDomain = "www.google.com"
@@ -115,8 +122,8 @@ func TestCacheTtl(t *testing.T) {
 
 	var attl uint32 = 10
 	var aaaattl uint32 = 20
-	nullroute := net.ParseIP("0.0.0.0")
-	nullroutev6 := net.ParseIP("0::0")
+	nullroute := net.ParseIP(Config.Nullroute)
+	nullroutev6 := net.ParseIP(Config.Nullroutev6)
 	a := &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   testDomain,
@@ -214,7 +221,7 @@ func TestCacheTtlFrequentPolling(t *testing.T) {
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
 	var attl uint32 = 10
-	nullroute := net.ParseIP("0.0.0.0")
+	nullroute := net.ParseIP(Config.Nullroute)
 	a := &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   testDomain,
@@ -248,38 +255,4 @@ func TestCacheTtlFrequentPolling(t *testing.T) {
 
 	cache.Remove(testDomain)
 
-}
-
-func TestExpirationRace(t *testing.T) {
-	cache := makeCache()
-	fakeClock := clockwork.NewFakeClock()
-	WallClock = fakeClock
-
-	const testDomain = "www.domain.com"
-
-	m := new(dns.Msg)
-	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
-
-	nullroute := net.ParseIP("0.0.0.0")
-	a := &dns.A{
-		Hdr: dns.RR_Header{
-			Name:   testDomain,
-			Rrtype: dns.TypeA,
-			Class:  dns.ClassINET,
-			Ttl:    1,
-		},
-		A: nullroute}
-	m.Answer = append(m.Answer, a)
-
-	//log.Printf("Adding %s with TTL %d\n", testDomain, attl)
-
-	if err := cache.Set(testDomain, m, true); err != nil {
-		t.Error(err)
-	}
-
-	for i := 0; i < 1000; i++ {
-		fakeClock.Advance(time.Duration(100) * time.Millisecond)
-		go cache.Get(testDomain)
-		go cache.Set(testDomain, m, true)
-	}
 }

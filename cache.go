@@ -73,11 +73,14 @@ type MemoryCache struct {
 }
 
 const (
-	BlockCacheEntryString = iota
-	BlockCacheEntryRegexp
+	// BlockCacheEntryRegexp marks the regexp based BlockCache entries
+	BlockCacheEntryRegexp = iota
+	// BlockCacheEntryGlob marks the glob based BlockCache entries
 	BlockCacheEntryGlob
 )
 
+// BlockCacheSpecial holds the extra data of a BlockCache entry
+// used to perform glob or regexp matching.
 type BlockCacheSpecial struct {
 	Data string
 	Type int
@@ -106,7 +109,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 	now := WallClock.Now().Truncate(time.Second)
 
 	expired := false
-	c.mu.Lock()
+	c.mu.RLock()
 	mesg, ok := c.Backend[key]
 	if ok && mesg.Msg == nil {
 		ok = false
@@ -124,7 +127,7 @@ func (c *MemoryCache) Get(key string) (*dns.Msg, bool, error) {
 			answer.Header().Ttl -= elapsed
 		}
 	}
-	c.mu.Unlock()
+	c.mu.RUnlock()
 
 	if !ok {
 		logger.Debugf("Cache: Cannot find key %s\n", key)

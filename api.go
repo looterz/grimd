@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net"
 	"net/http"
 	"strconv"
 
@@ -9,33 +8,25 @@ import (
 	"gopkg.in/gin-contrib/cors.v1"
 )
 
-// StartAPIServer starts the API server
-func StartAPIServer(config *Config,
-	reloadChan chan bool,
-	blockCache *MemoryBlockCache,
-	questionCache *MemoryQuestionCache) (*http.Server, error) {
-	if config.LogLevel < 2 {
+// StartAPIServer launches the API server
+func StartAPIServer() error {
+	if !Config.APIDebug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.Default()
-	server := &http.Server{
-		Addr:    config.API,
-		Handler: router,
-	}
-
 	router.Use(cors.Default())
 
 	router.GET("/blockcache", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": blockCache.Length(), "items": blockCache.Backend})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length(), "items": BlockCache.Backend})
 	})
 
 	router.GET("/blockcache/exists/:key", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"exists": blockCache.Exists(c.Param("key"))})
+		c.IndentedJSON(http.StatusOK, gin.H{"exists": BlockCache.Exists(c.Param("key"))})
 	})
 
 	router.GET("/blockcache/get/:key", func(c *gin.Context) {
-		if ok, _ := blockCache.Get(c.Param("key")); !ok {
+		if ok, _ := BlockCache.Get(c.Param("key")); !ok {
 			c.IndentedJSON(http.StatusOK, gin.H{"error": c.Param("key") + " not found"})
 		} else {
 			c.IndentedJSON(http.StatusOK, gin.H{"success": ok})
@@ -43,44 +34,44 @@ func StartAPIServer(config *Config,
 	})
 
 	router.GET("/blockcache/length", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": blockCache.Length()})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": BlockCache.Length()})
 	})
 
 	router.GET("/blockcache/remove/:key", func(c *gin.Context) {
 		// Removes from BlockCache only. If the domain has already been queried and placed into MemoryCache, will need to wait until item is expired.
-		blockCache.Remove(c.Param("key"))
+		BlockCache.Remove(c.Param("key"))
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/blockcache/set/:key", func(c *gin.Context) {
 		// MemoryBlockCache Set() always returns nil, so ignoring response.
-		_ = blockCache.Set(c.Param("key"), true)
+		_ = BlockCache.Set(c.Param("key"), true)
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/questioncache", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": questionCache.Length(), "items": questionCache.Backend})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length(), "items": QuestionCache.Backend})
 	})
 
 	router.GET("/questioncache/length", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": questionCache.Length()})
+		c.IndentedJSON(http.StatusOK, gin.H{"length": QuestionCache.Length()})
 	})
 
 	router.GET("/questioncache/clear", func(c *gin.Context) {
-		questionCache.Clear()
+		QuestionCache.Clear()
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
 	router.GET("/questioncache/client/:client", func(c *gin.Context) {
 		var filteredCache []QuestionCacheEntry
 
-		questionCache.mu.RLock()
-		for _, entry := range questionCache.Backend {
+		QuestionCache.mu.RLock()
+		for _, entry := range QuestionCache.Backend {
 			if entry.Remote == c.Param("client") {
 				filteredCache = append(filteredCache, entry)
 			}
 		}
-		questionCache.mu.RUnlock()
+		QuestionCache.mu.RUnlock()
 
 		c.IndentedJSON(http.StatusOK, filteredCache)
 	})
@@ -130,20 +121,15 @@ func StartAPIServer(config *Config,
 	})
 
 	router.POST("/blocklist/update", func(c *gin.Context) {
+		PerformUpdate(true)
 		c.AbortWithStatus(http.StatusOK)
-		reloadChan <- true
 	})
 
-	listener, err := net.Listen("tcp", config.API)
-	if err != nil {
-		return nil, err
+	if err := router.Run(Config.API); err != nil {
+		return err
 	}
-	go func() {
-		if err := server.Serve(listener); err != http.ErrServerClosed {
-			logger.Fatal(err)
-		}
-	}()
 
-	logger.Criticalf("API server listening on %s", config.API)
-	return server, err
+	logger.Critical("API server listening on", Config.API)
+
+	return nil
 }
