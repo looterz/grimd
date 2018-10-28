@@ -125,7 +125,7 @@ func createFileLogger(cfg fileConfig, moduleName string) (*logging.LeveledBacken
 	return &backend, file, nil
 }
 
-func creatSyslogBackend(cfg boolConfig, moduleName string) (*logging.LeveledBackend, error) {
+func createSyslogBackend(cfg boolConfig, moduleName string) (*logging.LeveledBackend, error) {
 	backend, err := logging.NewSyslogBackend("Grimd")
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func LoggerInit(cfg string) ([]*os.File, error) {
 	}
 
 	if logConfig.syslog.enabled {
-		syslogLogger, err := creatSyslogBackend(logConfig.syslog, moduleName)
+		syslogLogger, err := createSyslogBackend(logConfig.syslog, moduleName)
 		if err != nil {
 			panic(err)
 		}
