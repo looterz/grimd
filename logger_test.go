@@ -193,7 +193,50 @@ func TestCreateFileLogger(t *testing.T) {
 }
 
 func TestLogLevelParse(t *testing.T) {
-	l, err := parseLogLevel("0")
-	assert.Nil(t, err)
-	assert.Equal(t, logging.WARNING, l)
+	var testCases = []struct {
+		in  string
+		out logging.Level
+		err error
+	}{
+		{
+			in:  "0",
+			out: logging.WARNING,
+			err: nil,
+		},
+		{
+			in:  "1",
+			out: logging.INFO,
+			err: nil,
+		},
+		{
+			in:  "2",
+			out: logging.DEBUG,
+			err: nil,
+		},
+		{
+			in:  "3",
+			out: logging.CRITICAL,
+			err: fmt.Errorf("'3' is not a valid value. Valid values: 0,1,2"),
+		},
+		{
+			in:  "-12",
+			out: logging.CRITICAL,
+			err: fmt.Errorf("'-12' is not a valid value. Valid values: 0,1,2"),
+		},
+		{
+			in:  "a",
+			out: logging.CRITICAL,
+			err: fmt.Errorf("'a' is not an integer"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.in, func(t *testing.T) {
+			l, err := parseLogLevel(tc.in)
+			assert.Equal(t, tc.err, err)
+			if err == nil {
+				assert.Equal(t, tc.out, l)
+			}
+		})
+	}
 }
