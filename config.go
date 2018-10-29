@@ -40,6 +40,7 @@ type Config struct {
 	Whitelist         []string
 	ToggleName        string
 	ReactivationDelay uint
+	DoH               string
 }
 
 var defaultConfig = `# version this config was generated from
@@ -113,6 +114,9 @@ togglename = ""
 # If not zero, the delay in seconds before grimd automaticall reactivates after
 # having been turned off.
 reactivationdelay = 300
+
+#Dns over HTTPS provider to use.
+DoH = "https://cloudflare-dns.com/dns-query"
 `
 
 // WallClock is the wall clock
