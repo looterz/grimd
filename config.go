@@ -16,15 +16,14 @@ import (
 var BuildVersion = "1.0.5"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.2"
+var ConfigVersion = "1.0.3"
 
 // Config holds the configuration parameters
 type Config struct {
 	Version           string
 	Sources           []string
 	SourceDirs        []string
-	Log               string
-	LogLevel          int
+	LogConfig         string
 	Bind              string
 	API               string
 	Nullroute         string
@@ -40,7 +39,8 @@ type Config struct {
 	Whitelist         []string
 	ToggleName        string
 	ReactivationDelay uint
-	DoH               string
+	APIDebug          bool
+  DoH               string
 }
 
 var defaultConfig = `# version this config was generated from
@@ -63,17 +63,23 @@ sourcedirs = [
 "sources"
 ]
 
-# location of the log file
-log = "grimd.log"
+# log configuration
+# format: comma separated list of options, where options is one of 
+#   file:<filename>@<loglevel>
+#   stderr>@<loglevel>
+#   syslog@<loglevel>
+# loglevel: 0 = errors and important operations, 1 = dns queries, 2 = debug
+# e.g. logconfig = "file:grimd.log@2,syslog@1,stderr@2"
+logconfig = "file:grimd.log@2,stderr@2"
 
-# what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
-loglevel = 0
+# apidebug enables the debug mode of the http api library
+apidebug = false
 
 # address to bind to for the DNS server
 bind = "0.0.0.0:53"
 
 # address to bind to for the API server
-api = "127.0.0.1:8080"
+api = "127.0.0.1:18080"
 
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
