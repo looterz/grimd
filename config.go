@@ -16,7 +16,7 @@ import (
 var BuildVersion = "1.0.5"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.3"
+var ConfigVersion = "1.0.4"
 
 // Config holds the configuration parameters
 type Config struct {
@@ -40,7 +40,7 @@ type Config struct {
 	ToggleName        string
 	ReactivationDelay uint
 	APIDebug          bool
-  DoH               string
+  	DoH               string
 }
 
 var defaultConfig = `# version this config was generated from
