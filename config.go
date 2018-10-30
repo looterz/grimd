@@ -78,7 +78,7 @@ apidebug = false
 bind = "0.0.0.0:53"
 
 # address to bind to for the API server
-api = "127.0.0.1:18080"
+api = "127.0.0.1:8080"
 
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"

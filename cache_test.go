@@ -283,3 +283,28 @@ func TestExpirationRace(t *testing.T) {
 		go cache.Set(testDomain, m, true)
 	}
 }
+
+func addToCache(cache *MemoryQuestionCache, time int64) {
+	cache.Add(QuestionCacheEntry{
+		Date:    time,
+		Remote:  fmt.Sprintf("%d", time),
+		Blocked: true,
+		Query:   Question{},
+	})
+}
+
+func TestQuestionCacheGetFromTimestamp(t *testing.T) {
+	memCache := makeQuestionCache(100)
+	for i := 0; i < 100; i++ {
+		addToCache(memCache, int64(i))
+	}
+
+	entries := memCache.GetOlder(50)
+	assert.Len(t, entries, 49)
+	entries = memCache.GetOlder(0)
+	assert.Len(t, entries, 99)
+	entries = memCache.GetOlder(-1)
+	assert.Len(t, entries, 100)
+	entries = memCache.GetOlder(200)
+	assert.Len(t, entries, 0)
+}
