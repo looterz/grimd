@@ -302,3 +302,15 @@ func (c *MemoryQuestionCache) Length() int {
 	defer c.mu.RUnlock()
 	return len(c.Backend)
 }
+
+// GetOlder eturns a slice of the entries older than `time`
+func (c *MemoryQuestionCache) GetOlder(time int64) []QuestionCacheEntry {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	for i, e := range c.Backend {
+		if e.Date > time {
+			return c.Backend[i:]
+		}
+	}
+	return []QuestionCacheEntry{}
+}

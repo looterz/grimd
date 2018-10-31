@@ -59,7 +59,14 @@ func StartAPIServer(config *Config,
 	})
 
 	router.GET("/questioncache", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, gin.H{"length": questionCache.Length(), "items": questionCache.Backend})
+		highWater, err := strconv.ParseInt(c.DefaultQuery("highWater", "-1"), 10, 64)
+		if err != nil {
+			highWater = -1
+		}
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"length": questionCache.Length(),
+			"items":  questionCache.GetOlder(highWater),
+		})
 	})
 
 	router.GET("/questioncache/length", func(c *gin.Context) {
