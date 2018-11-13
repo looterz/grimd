@@ -11,6 +11,8 @@ import (
 	"github.com/op/go-logging"
 )
 
+const grimdModuleName = "grimd"
+
 type fileConfig struct {
 	name  string
 	level logging.Level
@@ -25,6 +27,13 @@ type logConfig struct {
 	files  []fileConfig
 	syslog boolConfig
 	stderr boolConfig
+}
+
+type loggingState struct {
+	fileBackends []logging.Backend
+	stdBackends  []logging.Backend
+	files        []*os.File
+	config       *logConfig
 }
 
 func parseLogLevel(level string) (logging.Level, error) {
@@ -135,52 +144,83 @@ func createSyslogBackend(cfg boolConfig, moduleName string) (*logging.LeveledBac
 	return &decorated, nil
 }
 
-// LoggerInit Initializes the logger
-func LoggerInit(cfg string) ([]*os.File, error) {
-
-	logConfig, err := parseLogConfig(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	//fmt.Printf("%d", errorLevel[0])
-	//fmt.Printf("%#v", logConfig)
-
-	const moduleName = "grimd"
-	logger = logging.MustGetLogger(moduleName)
-
+func createFileLoggers(files []fileConfig, moduleName string) ([]logging.Backend, []*os.File, error) {
 	var backends []logging.Backend
 	var openFiles []*os.File
 
-	for _, f := range logConfig.files {
+	for _, f := range files {
 		b, file, err := createFileLogger(f, moduleName)
 		if err != nil {
 			for _, toClose := range openFiles {
 				toClose.Close()
 			}
-			return nil, err
+			return nil, nil, err
 		}
 		backends = append(backends, *b)
 		openFiles = append(openFiles, file)
 	}
+	return backends, openFiles, nil
+}
+
+// loggerInit Initializes the logger
+func loggerInit(cfg string) (loggingState, error) {
+
+	var state = loggingState{}
+	logConfig, err := parseLogConfig(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	state.config = logConfig
+	logger = logging.MustGetLogger(grimdModuleName)
+
+	backends, openFiles, err := createFileLoggers(logConfig.files, grimdModuleName)
+	if err != nil {
+		return loggingState{}, err
+	}
+
+	state.fileBackends = backends
+	state.files = openFiles
 
 	if logConfig.stderr.enabled {
 		var format = `%{color}%{time:15:04:05.000} %{level:.4s} %{shortfile} ▶ %{id:03x}%{color:reset} %{message}`
-		stderrLogger := createLoggerFromFile(os.Stderr, logConfig.stderr.level, format, moduleName)
-		backends = append(backends, stderrLogger)
+		stderrLogger := createLoggerFromFile(os.Stderr, logConfig.stderr.level, format, grimdModuleName)
+		state.stdBackends = append(state.stdBackends, stderrLogger)
 	}
 
 	if logConfig.syslog.enabled {
-		syslogLogger, err := createSyslogBackend(logConfig.syslog, moduleName)
+		syslogLogger, err := createSyslogBackend(logConfig.syslog, grimdModuleName)
 		if err != nil {
 			panic(err)
 		}
-		backends = append(backends, *syslogLogger)
+		state.stdBackends = append(state.stdBackends, *syslogLogger)
 	}
 
+	backends = append(state.stdBackends, state.fileBackends...)
 	logging.SetBackend(backends...)
 
-	return openFiles, nil
+	return state, nil
+}
+
+func (s loggingState) cleanUp() {
+	for _, f := range s.files {
+		f.Close()
+	}
+}
+
+func (s loggingState) reopen() error {
+	b, f, err := createFileLoggers(s.config.files, grimdModuleName)
+	if err != nil {
+		logger.Errorf("Failed to reinit logging: %s", err)
+		return err
+	}
+	s.cleanUp()
+	s.fileBackends = b
+	s.files = f
+
+	backends := append(s.stdBackends, s.fileBackends...)
+	logging.SetBackend(backends...)
+	return nil
 }
 
 var (

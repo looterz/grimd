@@ -5,7 +5,9 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 )
 
@@ -46,14 +48,12 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	logFiles, err := LoggerInit(config.LogConfig)
+	loggingState, err := loggerInit(config.LogConfig)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer func() {
-		for _, f := range logFiles {
-			f.Close()
-		}
+		loggingState.cleanUp()
 	}()
 
 	grimdActive = true
@@ -86,14 +86,21 @@ func main() {
 	}
 
 	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt, syscall.SIGHUP)
 
 forever:
 	for {
 		select {
-		case <-sig:
-			logger.Error("signal received, stopping\n")
-			quitActivation <- true
-			break forever
+		case s := <-sig:
+			switch s {
+			case os.Interrupt:
+				logger.Error("SIGINT received, stopping\n")
+				quitActivation <- true
+				break forever
+			case syscall.SIGHUP:
+				logger.Error("SIGHUP received: rotating logs\n")
+				loggingState.reopen()
+			}
 		case <-reloadChan:
 			blockCache, apiServer, err = reloadBlockCache(config, blockCache, questionCache, apiServer, server, reloadChan)
 			if err != nil {
