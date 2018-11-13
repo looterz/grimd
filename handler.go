@@ -198,7 +198,7 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 			NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
 			go questionCache.Add(NewEntry)
 
-			mesg, err := h.resolver.Lookup(Net, req, config.Timeout, config.Interval, config.Nameservers)
+			mesg, err := h.resolver.Lookup(Net, req, config.Timeout, config.Interval, config.Nameservers, config.DoH)
 
 			if err != nil {
 				logger.Errorf("resolve query error %s\n", err)
@@ -212,7 +212,7 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 			}
 
 			if mesg.Truncated && Net == "udp" {
-				mesg, err = h.resolver.Lookup("tcp", req, config.Timeout, config.Interval, config.Nameservers)
+				mesg, err = h.resolver.Lookup("tcp", req, config.Timeout, config.Interval, config.Nameservers, config.DoH)
 				if err != nil {
 					logger.Errorf("resolve tcp query error %s\n", err)
 					h.HandleFailed(w, req)
