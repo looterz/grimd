@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"runtime"
 	"time"
+	"github.com/elico/drbl-peer"
 )
 
 var (
@@ -21,6 +22,7 @@ var (
 
 	// QuestionCache contains all queries to the dns server
 	QuestionCache = &MemoryQuestionCache{Backend: make([]QuestionCacheEntry, 0), Maxcount: 1000}
+	drblPeers *drblpeer.DrblPeers
 )
 
 func main() {
@@ -37,6 +39,15 @@ func main() {
 		log.Fatal(err)
 	}
 	defer logFile.Close()
+
+        if Config.UseDrbl > 0 {
+                drblPeers, _ = drblpeer.NewPeerListFromYamlFile(Config.DrblPeersFilename, Config.DrblBlockWeight, Config.DrblTimeout, (Config.LogLevel > 0))
+                if Config.DrblDebug > 0 {
+                        log.Println("Drbl Debug is ON")
+                        drblPeers.Debug = true
+                        log.Println("Drbl Debug is ON", drblPeers.Debug)
+                }
+        }
 
 	// delay updating the blocklists, cache until the server starts and can serve requests as the local resolver
 	timer := time.NewTimer(time.Second * 1)

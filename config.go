@@ -14,10 +14,10 @@ import (
 )
 
 // BuildVersion returns the build version of grimd, this should be incremented every new release
-var BuildVersion = "1.0.6"
+var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.3"
+var ConfigVersion = "1.0.4"
 
 type config struct {
 	Version           string
@@ -43,6 +43,12 @@ type config struct {
 	WebPanel          bool
 	WebUser           string
 	WebPass           string
+        UseDrbl              int
+        DrblPeersFilename    string
+        DrblBlockWeight      int64
+        DrblTimeout          int
+        DrblDebug            int
+
 }
 
 var defaultConfig = `# version this config was generated from
@@ -112,6 +118,14 @@ questioncachecap = 5000
 
 # manual blocklist entries
 blocklist = []
+
+# Drbl related settings
+usedrbl = 0
+drblpeersfilename = "drblpeers.yaml"
+drblblockweight = 128
+drbltimeout = 30
+drbldebug = 0
+
 
 # manual whitelist entries
 whitelist = [
