@@ -40,7 +40,7 @@ type Config struct {
 	ToggleName        string
 	ReactivationDelay uint
 	APIDebug          bool
-  	DoH               string
+	DoH               string
 }
 
 var defaultConfig = `# version this config was generated from
@@ -88,7 +88,7 @@ nullroute = "0.0.0.0"
 nullroutev6 = "0:0:0:0:0:0:0:0"
 
 # nameservers to forward queries to
-nameservers = ["8.8.8.8:53", "8.8.4.4:53"]
+nameservers = ["1.1.1.1:53", "1.0.0.1:53"]
 
 # concurrency interval for lookups in miliseconds
 interval = 200

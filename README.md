@@ -37,11 +37,17 @@ sourcedirs = [
 "sources"
 ]
 
-# location of the log file
-log = "grimd.log"
+# log configuration
+# format: comma separated list of options, where options is one of 
+#   file:<filename>@<loglevel>
+#   stderr>@<loglevel>
+#   syslog@<loglevel>
+# loglevel: 0 = errors and important operations, 1 = dns queries, 2 = debug
+# e.g. logconfig = "file:grimd.log@2,syslog@1,stderr@2"
+logconfig = "file:grimd.log@2,stderr@2"
 
-# what kind of information should be logged, 0 = errors and important operations, 1 = dns queries, 2 = debug
-loglevel = 0
+# apidebug enables the debug mode of the http api library
+apidebug = false
 
 # address to bind to for the DNS server
 bind = "0.0.0.0:53"
@@ -56,7 +62,7 @@ nullroute = "0.0.0.0"
 nullroutev6 = "0:0:0:0:0:0:0:0"
 
 # nameservers to forward queries to
-nameservers = ["8.8.8.8:53", "8.8.4.4:53"]
+nameservers = ["1.1.1.1:53", "1.0.0.1:53"]
 
 # concurrency interval for lookups in miliseconds
 interval = 200
@@ -88,6 +94,9 @@ togglename = ""
 # If not zero, the delay in seconds before grimd automaticall reactivates after
 # having been turned off.
 reactivationdelay = 300
+
+#Dns over HTTPS provider to use.
+DoH = "https://cloudflare-dns.com/dns-query"
 ```
 
 # Building
