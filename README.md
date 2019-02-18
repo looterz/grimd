@@ -18,7 +18,7 @@ You can also download one of the [releases](https://github.com/looterz/grimd/rel
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.5"
+version = "1.0.6"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -81,6 +81,13 @@ questioncachecap = 5000
 
 # manual blocklist entries
 blocklist = []
+
+# Drbl related settings
+usedrbl = 0
+drblpeersfilename = "drblpeers.yaml"
+drblblockweight = 128
+drbltimeout = 30
+drbldebug = 0
 
 # manual whitelist entries
 whitelist = [
