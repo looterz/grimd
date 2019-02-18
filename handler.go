@@ -143,11 +143,20 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 			}
 			// Check blocklist
 			var blacklisted = false
+			var drblblacklisted bool
 
 			if IPQuery > 0 {
 				blacklisted = blockCache.Exists(Q.Qname)
 
-				if grimdActive && blacklisted {
+				if config.UseDrbl > 0 {
+					drblblacklisted = drblCheckHostname(Q.Qname)
+					logger.Debug("DrblBlistCheck enabled and checked =>", Q.Qname, "The result is =>", drblblacklisted)
+				} else {
+					logger.Debug("DrblBlistCheck is disabled for =>", Q.Qname, "The result is =>", drblblacklisted)
+
+				}
+
+				if grimdActive && (blacklisted || drblblacklisted) {
 					m := new(dns.Msg)
 					m.SetReply(req)
 

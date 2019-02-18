@@ -225,5 +225,5 @@ func (s loggingState) reopen() error {
 
 var (
 	// Initialize to a dummy but functional logger so that tested code has something to write to
-	logger *logging.Logger = logging.MustGetLogger("test")
+	logger = logging.MustGetLogger("test")
 )
