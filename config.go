@@ -69,7 +69,7 @@ sourcedirs = [
 ]
 
 # log configuration
-# format: comma separated list of options, where options is one of 
+# format: comma separated list of options, where options is one of
 #   file:<filename>@<loglevel>
 #   stderr>@<loglevel>
 #   syslog@<loglevel>

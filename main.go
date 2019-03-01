@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/elico/drbl-peer"
+	drblpeer "github.com/elico/drbl-peer"
 )
 
 var (
@@ -99,7 +99,7 @@ func main() {
 		logger.Fatalf("Cannot start the API server %s", err)
 	}
 
-	sig := make(chan os.Signal)
+	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGHUP)
 
 forever:

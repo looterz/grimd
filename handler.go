@@ -120,7 +120,7 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 			if IPQuery > 0 {
 				mesg, blocked, err := h.cache.Get(key)
 				if err != nil {
-					if mesg, blocked, err = h.negCache.Get(key); err != nil {
+					if _, _, err = h.negCache.Get(key); err != nil {
 						logger.Debugf("%s didn't hit cache\n", Q.String())
 					} else {
 						logger.Debugf("%s hit negative cache\n", Q.String())

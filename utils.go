@@ -2,7 +2,7 @@ package main
 
 func makeCache() MemoryCache {
 	return MemoryCache{
-		Backend:  make(map[string]*Mesg, 0),
+		Backend:  make(map[string]*Mesg),
 		Maxcount: 0,
 	}
 }

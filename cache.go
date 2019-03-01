@@ -63,6 +63,7 @@ type Cache interface {
 	Exists(key string) bool
 	Remove(key string)
 	Length() int
+	Clear()
 }
 
 // MemoryCache type
@@ -199,6 +200,13 @@ func (c *MemoryCache) Full() bool {
 	return c.Length() >= c.Maxcount
 }
 
+// Clear empties the cache
+func (c *MemoryCache) Clear() {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	c.Backend = make(map[string]*Mesg)
+}
+
 // KeyGen generates a key for the hash from a question
 func KeyGen(q Question) string {
 	h := md5.New()
@@ -292,7 +300,7 @@ func (c *MemoryQuestionCache) Add(q QuestionCacheEntry) {
 // Clear clears the contents of the cache
 func (c *MemoryQuestionCache) Clear() {
 	c.mu.Lock()
-	c.Backend = make([]QuestionCacheEntry, 0, 0)
+	c.Backend = make([]QuestionCacheEntry, 0)
 	c.mu.Unlock()
 }
 

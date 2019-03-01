@@ -24,17 +24,26 @@ func TestCache(t *testing.T) {
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
 
 	if err := cache.Set(testDomain, m, true); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if _, _, err := cache.Get(testDomain); err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	if !cache.Exists(testDomain) {
+		t.Fatal("Expected domain in cache")
 	}
 
 	cache.Remove(testDomain)
 
 	if _, _, err := cache.Get(testDomain); err == nil {
-		t.Error("cache entry still existed after remove")
+		t.Fatal("cache entry still existed after remove")
+	}
+
+	cache.Clear()
+	if cache.Length() != 0 {
+		t.Fatal("Failed to clear cache")
 	}
 }
 

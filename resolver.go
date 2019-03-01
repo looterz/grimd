@@ -114,6 +114,10 @@ func (r *Resolver) Timeout(timeout int) time.Duration {
 
 //DoHLookup performs a DNS lookup over https
 func (r *Resolver) DoHLookup(url string, timeout int, req *dns.Msg) (*dns.Msg, error) {
+	if len(req.Question) < 1 {
+		logger.Error("Invalid DNS message")
+		return nil, ResolvError{"", "HTTPS", []string{url}}
+	}
 	qname := req.Question[0].Name
 
 	//Turn message into wire format
