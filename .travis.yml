@@ -1,14 +1,16 @@
 language: go
-go:
-  - 1.10.x
-  - 1.11.x
-  - 1.12.x
-  - tip
+
+ matrix:
+  include:
+  - go: "1.10.x"
+    install: go get ./...
+    script: go test -v ./...
+  - go: "1.11.x"
+    script: go test -v ./...
+  - go: "1.12.x"
+    script: go test -v ./...
 
 install: true
 
 env:
   - GO111MODULE=on
-
-script:
- - go test -v ./...
