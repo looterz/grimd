@@ -1,6 +1,6 @@
 language: go
 
- matrix:
+matrix:
   include:
   - go: "1.10.x"
     install: go get ./...
