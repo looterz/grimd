@@ -1,3 +1,11 @@
+.PHONY: profile
+profile:
+	@mkdir -p pprof/
+	go test -cpuprofile pprof/cpu.prof -memprofile pprof/mem.prof -bench .
+	go tool pprof -pdf pprof/cpu.prof > pprof/cpu.pdf
+	xdg-open pprof/cpu.pdf
+	go tool pprof -weblist=.* pprof/cpu.prof
+
 .PHONY: benchcmp
 benchcmp:
 	# ensure no govenor weirdness
