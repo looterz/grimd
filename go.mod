@@ -2,7 +2,10 @@ module github.com/looterz/grimd
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/elico/dns_resolver v0.0.0-20170210091832-f1a4068131f1 // indirect
+	github.com/elico/drbl-peer v0.0.0-20190202055151-d5a0a95c4b84
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/gin-gonic/gin v1.3.0
 	github.com/golang/protobuf v1.2.0 // indirect
