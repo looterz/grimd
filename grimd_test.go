@@ -6,11 +6,6 @@ import (
 	"github.com/miekg/dns"
 )
 
-const (
-	testNameserver = "127.0.0.1:53"
-	testDomain     = "www.google.com"
-)
-
 func BenchmarkResolver(b *testing.B) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)

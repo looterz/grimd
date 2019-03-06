@@ -153,9 +153,8 @@ func (c *MemoryCache) Set(key string, msg *dns.Msg, blocked bool) error {
 	if msg == nil {
 		logger.Debugf("Setting an empty value for key %s", key)
 	}
-	mesg := Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Lock()
-	c.Backend[key] = &mesg
+	c.Backend[key] = &Mesg{msg, blocked, WallClock.Now().Truncate(time.Second)}
 	c.mu.Unlock()
 
 	return nil

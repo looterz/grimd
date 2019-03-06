@@ -12,11 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCache(t *testing.T) {
-	const (
-		testDomain = "www.google.com"
-	)
+const (
+	testDomain     = "www.google.com"
+	testNameserver = "127.0.0.1:53"
+)
 
+func TestCache(t *testing.T) {
 	cache := makeCache()
 	WallClock = clockwork.NewFakeClock()
 
@@ -102,10 +103,6 @@ func TestBlockCacheGlob(t *testing.T) {
 }
 
 func TestCacheTtl(t *testing.T) {
-	const (
-		testDomain = "www.google.com"
-	)
-
 	fakeClock := clockwork.NewFakeClock()
 	WallClock = fakeClock
 	cache := makeCache()
@@ -307,4 +304,38 @@ func TestQuestionCacheGetFromTimestamp(t *testing.T) {
 	assert.Len(t, entries, 100)
 	entries = memCache.GetOlder(200)
 	assert.Len(t, entries, 0)
+}
+
+func BenchmarkSetCache(b *testing.B) {
+	cache := makeCache()
+
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if err := cache.Set(testDomain, m, false); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkGetCache(b *testing.B) {
+	cache := makeCache()
+
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(testDomain), dns.TypeA)
+
+	if err := cache.Set(testDomain, m, false); err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if _, _, err := cache.Get(testDomain); err != nil {
+			b.Fatal(err)
+		}
+	}
 }
