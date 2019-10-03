@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/miekg/dns"
@@ -40,6 +41,8 @@ type DNSHandler struct {
 	resolver       *Resolver
 	cache          Cache
 	negCache       Cache
+	active         bool
+	muActive       sync.RWMutex
 }
 
 // DNSOperationData type
@@ -74,6 +77,7 @@ func NewHandler(config *Config, blockCache *MemoryBlockCache, questionCache *Mem
 		resolver:       resolver,
 		cache:          cache,
 		negCache:       negCache,
+		active:         true,
 	}
 
 	go handler.do(config, blockCache, questionCache)
@@ -267,12 +271,20 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 
 // DoTCP begins a tcp query
 func (h *DNSHandler) DoTCP(w dns.ResponseWriter, req *dns.Msg) {
-	h.requestChannel <- DNSOperationData{"tcp", w, req}
+	h.muActive.RLock()
+	if h.active {
+		h.requestChannel <- DNSOperationData{"tcp", w, req}
+	}
+	h.muActive.RUnlock()
 }
 
 // DoUDP begins a udp query
 func (h *DNSHandler) DoUDP(w dns.ResponseWriter, req *dns.Msg) {
-	h.requestChannel <- DNSOperationData{"udp", w, req}
+	h.muActive.RLock()
+	if h.active {
+		h.requestChannel <- DNSOperationData{"udp", w, req}
+	}
+	h.muActive.RUnlock()
 }
 
 // HandleFailed handles dns failures
