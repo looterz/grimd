@@ -56,7 +56,10 @@ func (s *Server) start(ds *dns.Server) {
 // Stop stops the server
 func (s *Server) Stop() {
 	if s.handler != nil {
+		s.handler.muActive.Lock()
+		s.handler.active = false
 		close(s.handler.requestChannel)
+		s.handler.muActive.Unlock()
 	}
 	if s.udpServer != nil {
 		s.udpServer.Shutdown()
