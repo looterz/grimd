@@ -164,28 +164,32 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 					m := new(dns.Msg)
 					m.SetReply(req)
 
-					nullroute := net.ParseIP(config.Nullroute)
-					nullroutev6 := net.ParseIP(config.Nullroutev6)
+					if config.NXDomain {
+						m.SetRcode(req, dns.RcodeNameError)
+					} else {
+						nullroute := net.ParseIP(config.Nullroute)
+						nullroutev6 := net.ParseIP(config.Nullroutev6)
 
-					switch IPQuery {
-					case _IP4Query:
-						rrHeader := dns.RR_Header{
-							Name:   q.Name,
-							Rrtype: dns.TypeA,
-							Class:  dns.ClassINET,
-							Ttl:    config.TTL,
+						switch IPQuery {
+						case _IP4Query:
+							rrHeader := dns.RR_Header{
+								Name:   q.Name,
+								Rrtype: dns.TypeA,
+								Class:  dns.ClassINET,
+								Ttl:    config.TTL,
+							}
+							a := &dns.A{Hdr: rrHeader, A: nullroute}
+							m.Answer = append(m.Answer, a)
+						case _IP6Query:
+							rrHeader := dns.RR_Header{
+								Name:   q.Name,
+								Rrtype: dns.TypeAAAA,
+								Class:  dns.ClassINET,
+								Ttl:    config.TTL,
+							}
+							a := &dns.AAAA{Hdr: rrHeader, AAAA: nullroutev6}
+							m.Answer = append(m.Answer, a)
 						}
-						a := &dns.A{Hdr: rrHeader, A: nullroute}
-						m.Answer = append(m.Answer, a)
-					case _IP6Query:
-						rrHeader := dns.RR_Header{
-							Name:   q.Name,
-							Rrtype: dns.TypeAAAA,
-							Class:  dns.ClassINET,
-							Ttl:    config.TTL,
-						}
-						a := &dns.AAAA{Hdr: rrHeader, AAAA: nullroutev6}
-						m.Answer = append(m.Answer, a)
 					}
 
 					h.WriteReplyMsg(w, m)

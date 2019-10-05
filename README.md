@@ -55,6 +55,9 @@ bind = "0.0.0.0:53"
 # address to bind to for the API server
 api = "127.0.0.1:8080"
 
+# response to blocked queries with a NXDOMAIN
+NXDomain = false
+
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
 
