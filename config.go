@@ -16,7 +16,7 @@ import (
 var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.6"
+var ConfigVersion = "1.0.7"
 
 // Config holds the configuration parameters
 type Config struct {
@@ -26,6 +26,7 @@ type Config struct {
 	LogConfig         string
 	Bind              string
 	API               string
+	NXDomain          bool
 	Nullroute         string
 	Nullroutev6       string
 	Nameservers       []string
@@ -85,6 +86,9 @@ bind = "0.0.0.0:53"
 
 # address to bind to for the API server
 api = "127.0.0.1:8080"
+
+# response to blocked queries with a NXDOMAIN
+nxdomain = false
 
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
