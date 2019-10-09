@@ -28,6 +28,16 @@ func (s *Server) Run(config *Config,
 	udpHandler := dns.NewServeMux()
 	udpHandler.HandleFunc(".", s.handler.DoUDP)
 
+	for _, recordText := range config.CustomDNSRecords {
+		customRecord, customRecordErr := NewCustomDNSRecord(s.handler, recordText)
+		if customRecordErr == nil {
+			tcpHandler.HandleFunc(customRecord.answer.Header().Name, customRecord.serve)
+			udpHandler.HandleFunc(customRecord.answer.Header().Name, customRecord.serve)
+		} else {
+			logger.Errorf("Cannot parse custom record %s", customRecordErr)
+		}
+	}
+
 	s.tcpServer = &dns.Server{Addr: s.host,
 		Net:          "tcp",
 		Handler:      tcpHandler,
