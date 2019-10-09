@@ -31,10 +31,16 @@ func (s *Server) Run(config *Config,
 	for _, recordText := range config.CustomDNSRecords {
 		customRecord, customRecordErr := NewCustomDNSRecord(s.handler, recordText)
 		if customRecordErr == nil {
-			tcpHandler.HandleFunc(customRecord.answer.Header().Name, customRecord.serve)
-			udpHandler.HandleFunc(customRecord.answer.Header().Name, customRecord.serve)
+			name := customRecord.answer.Header().Name
+
+			if len(name) > 0 {
+				tcpHandler.HandleFunc(name, customRecord.serve)
+				udpHandler.HandleFunc(name, customRecord.serve)
+			} else {
+				logger.Errorf("Cannot parse custom record: invalid dns")
+			}
 		} else {
-			logger.Errorf("Cannot parse custom record %s", customRecordErr)
+			logger.Errorf("Cannot parse custom record: %s", customRecordErr)
 		}
 	}
 
