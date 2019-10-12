@@ -16,7 +16,7 @@ import (
 var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.7"
+var ConfigVersion = "1.0.8"
 
 // Config holds the configuration parameters
 type Config struct {
@@ -38,6 +38,7 @@ type Config struct {
 	TTL               uint32
 	Blocklist         []string
 	Whitelist         []string
+	CustomDNSRecords  []string
 	ToggleName        string
 	ReactivationDelay uint
 	APIDebug          bool
@@ -129,6 +130,9 @@ whitelist = [
 	"getsentry.com",
 	"www.getsentry.com"
 ]
+
+# manual custom dns entries
+customdnsrecords = []
 
 # When this string is queried, toggle grimd on and off
 togglename = ""

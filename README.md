@@ -98,6 +98,9 @@ whitelist = [
 	"www.getsentry.com"
 ]
 
+# manual custom dns entries
+customdnsrecords = []
+
 # When this string is queried, toggle grimd on and off
 togglename = ""
 
