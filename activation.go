@@ -17,13 +17,18 @@ type ActivationHandler struct {
 	setChannel    chan bool
 }
 
-func (a *ActivationHandler) loop(quit <-chan bool, reactivationDelay uint) {
+func startActivation(actChannel chan *ActivationHandler, quit chan bool, reactivationDelay uint) {
 	var reactivate time.Time
 	var reactivatePending bool
+	a := &ActivationHandler{}
 
 	a.queryChannel = make(chan bool)
 	a.toggleChannel = make(chan ToggleData)
 	a.setChannel = make(chan bool)
+
+	// put the reference to our struct in the channel
+	// then continue to the loop
+	actChannel <- a
 
 	ticker := time.Tick(1 * time.Second)
 
@@ -68,6 +73,8 @@ forever:
 			}
 		}
 	}
+	logger.Debugf("Activation goroutine exiting")
+	quit <- true
 }
 
 // Query activation state
