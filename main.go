@@ -18,7 +18,7 @@ var (
 	configPath      string
 	forceUpdate     bool
 	grimdActive     bool
-	grimdActivation ActivationHandler
+	grimdActivation *ActivationHandler
 	drblPeers       *drblpeer.DrblPeers
 )
 
@@ -72,7 +72,11 @@ func main() {
 
 	grimdActive = true
 	quitActivation := make(chan bool)
-	go grimdActivation.loop(quitActivation, config.ReactivationDelay)
+	actChannel := make(chan *ActivationHandler)
+
+	go startActivation(actChannel, quitActivation, config.ReactivationDelay)
+	grimdActivation = <-actChannel
+	close(actChannel)
 
 	server := &Server{
 		host:     config.Bind,
@@ -122,6 +126,9 @@ forever:
 			}
 		}
 	}
+	// make sure we give the activation goroutine time to exit
+	<-quitActivation
+	logger.Debugf("Main goroutine exiting")
 }
 
 func init() {
