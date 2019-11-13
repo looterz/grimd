@@ -138,7 +138,10 @@ func StartAPIServer(config *Config,
 
 	router.POST("/blocklist/update", func(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
-		reloadChan <- true
+		// Send reload trigger to chan in background goroutine so does not hang
+		go func(reloadChan chan bool) {
+			reloadChan <- true
+		}(reloadChan)
 	})
 
 	listener, err := net.Listen("tcp", config.API)

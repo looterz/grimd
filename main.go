@@ -29,11 +29,14 @@ func reloadBlockCache(config *Config,
 	apiServer *http.Server,
 	server *Server,
 	reloadChan chan bool) (*MemoryBlockCache, *http.Server, error) {
+
 	logger.Debug("Reloading the blockcache")
 	blockCache = PerformUpdate(config, true)
 	server.Stop()
 	if apiServer != nil {
-		apiServer.Shutdown(context.Background())
+		if err := apiServer.Shutdown(context.Background()); err != nil {
+			logger.Debugf("error shutting down api server: %v", err)
+		}
 	}
 	server.Run(config, blockCache, questionCache)
 	apiServer, err := StartAPIServer(config, reloadChan, blockCache, questionCache)
