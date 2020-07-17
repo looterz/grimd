@@ -55,14 +55,12 @@ version = "%s"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
-"http://mirror1.malwaredomains.com/files/justdomains",
+"https://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-"http://sysctl.org/cameleon/hosts",
-"https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
+"https://sysctl.org/cameleon/hosts",
 "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
 "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
-"http://hosts-file.net/ad_servers.txt",
-"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+"https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt"
 ]
 
 # list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
