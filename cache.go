@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -10,6 +11,8 @@ import (
 	"github.com/miekg/dns"
 	"github.com/ryanuber/go-glob"
 )
+
+const globChars = "*?"
 
 // KeyNotFound type
 type KeyNotFound struct {
@@ -72,24 +75,10 @@ type MemoryCache struct {
 	mu       sync.RWMutex
 }
 
-const (
-	// BlockCacheEntryRegexp marks the regexp based BlockCache entries
-	BlockCacheEntryRegexp = iota
-	// BlockCacheEntryGlob marks the glob based BlockCache entries
-	BlockCacheEntryGlob
-)
-
-// BlockCacheSpecial holds the extra data of a BlockCache entry
-// used to perform glob or regexp matching.
-type BlockCacheSpecial struct {
-	Data string
-	Type int
-}
-
 // MemoryBlockCache type
 type MemoryBlockCache struct {
 	Backend map[string]bool
-	Special []BlockCacheSpecial
+	Special map[string]*regexp.Regexp
 	mu      sync.RWMutex
 }
 
@@ -210,10 +199,20 @@ func KeyGen(q Question) string {
 
 // Get returns the entry for a key or an error
 func (c *MemoryBlockCache) Get(key string) (bool, error) {
-	key = strings.ToLower(key)
+	var ok, val bool
 
 	c.mu.RLock()
-	val, ok := c.Backend[key]
+	if strings.HasPrefix(key, "~") {
+		_, ok = c.Special[key]
+		val = true
+	} else if strings.ContainsAny(key, globChars) {
+		key = strings.ToLower(key)
+		_, ok = c.Special[key]
+		val = true
+	} else {
+		key = strings.ToLower(key)
+		val, ok = c.Backend[key]
+	}
 	c.mu.RUnlock()
 
 	if !ok {
@@ -225,25 +224,34 @@ func (c *MemoryBlockCache) Get(key string) (bool, error) {
 
 // Remove removes an entry from the cache
 func (c *MemoryBlockCache) Remove(key string) {
-	key = strings.ToLower(key)
-
 	c.mu.Lock()
-	delete(c.Backend, key)
+	if strings.HasPrefix(key, "~") {
+		delete(c.Special, key)
+	} else if strings.ContainsAny(key, globChars) {
+		delete(c.Special, strings.ToLower(key))
+	} else {
+		delete(c.Backend, strings.ToLower(key))
+	}
 	c.mu.Unlock()
 }
 
 // Set sets a value in the BlockCache
 func (c *MemoryBlockCache) Set(key string, value bool) error {
-	key = strings.ToLower(key)
-	const globChars = "?*"
-
 	c.mu.Lock()
-	if strings.ContainsAny(key, globChars) {
-		c.Special = append(
-			c.Special,
-			BlockCacheSpecial{Data: key, Type: BlockCacheEntryGlob})
+	if strings.HasPrefix(key, "~") {
+		// get rid of the ~ prefix 
+		runes := []rune(key)
+		ex := string(runes[1:])
+		re, err := regexp.Compile(ex)
+		if err != nil {
+			logger.Errorf("Invalid regexp entry: `%s` %v", key, err)
+		} else {
+			c.Special[key] = re
+		}
+	} else if strings.ContainsAny(key, globChars) {
+		c.Special[strings.ToLower(key)] = nil
 	} else {
-		c.Backend[key] = value
+		c.Backend[strings.ToLower(key)] = value
 	}
 	c.mu.Unlock()
 
@@ -257,11 +265,13 @@ func (c *MemoryBlockCache) Exists(key string) bool {
 	c.mu.RLock()
 	_, ok := c.Backend[key]
 	if !ok {
-		for _, element := range c.Special {
-			if element.Type == BlockCacheEntryRegexp {
-				panic("Unsupported")
-			} else if element.Type == BlockCacheEntryGlob {
-				if glob.Glob(element.Data, key) {
+		for data, regex := range c.Special {
+			if regex != nil {
+				if regex.MatchString(key) {
+					ok = true
+				}
+			} else {
+				if glob.Glob(data, key) {
 					ok = true
 				}
 			}
