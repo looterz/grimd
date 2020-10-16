@@ -96,6 +96,22 @@ func StartAPIServer(config *Config,
 		c.IndentedJSON(http.StatusOK, filteredCache)
 	})
 
+	router.GET("/questioncache/client", func(c *gin.Context) {
+		clientList := make(map[string]bool)
+		questionCache.mu.RLock()
+		for _, entry := range questionCache.Backend {
+			if _, ok := clientList[entry.Remote]; !ok {
+				clientList[entry.Remote] = true
+			}
+		}
+		questionCache.mu.RUnlock()
+		var clients []string
+		for client := range clientList {
+			clients = append(clients, client)
+		}
+		c.IndentedJSON(http.StatusOK, clients)
+	})
+
 	router.OPTIONS("/application/active", func(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
 	})
