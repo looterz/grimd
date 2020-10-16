@@ -1,12 +1,14 @@
-FROM golang
+FROM golang:alpine
 LABEL mantainer="integrii@gmail.com"
 
 ADD *.go /go/src/github.com/looterz/grimd/
 WORKDIR /go/src/github.com/looterz/grimd
-RUN go get -v
-RUN go build -v
-RUN mkdir /app
-RUN cp grimd /app/grimd
+RUN \
+  apk --no-cache add git && \
+  go get -v && \
+  go build -v && \
+  mkdir /app && \
+  cp grimd /app/grimd
 WORKDIR /app
 
 EXPOSE 53:53/udp
