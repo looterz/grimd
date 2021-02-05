@@ -128,3 +128,6 @@ Incoming requests spawn a goroutine and are served concurrently, and the block c
 
 # Daemonize
 You can find examples of different daemon scripts for grimd on the [wiki](https://github.com/looterz/grimd/wiki/Daemon-Scripts).
+
+# Credits
+This entire project was written in a single day by the great one known a A-A-Ron
