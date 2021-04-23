@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -57,9 +60,38 @@ func StartAPIServer(config *Config,
 	})
 
 	router.GET("/blockcache/set/:key", func(c *gin.Context) {
-		// MemoryBlockCache Set() always returns nil, so ignoring response.
-		_ = blockCache.Set(c.Param("key"), true)
-		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
+		filePath := filepath.FromSlash("sources/personal.list")
+		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			logger.Critical(err)
+		}
+		defer f.Close()
+
+		_, err = blockCache.Get(c.Param("key"))
+		if err == (KeyNotFound{c.Param("key")}) {
+			// MemoryBlockCache Set() always returns nil, so ignoring response.
+			_ = blockCache.Set(c.Param("key"), true)
+			c.IndentedJSON(http.StatusOK, gin.H{"success": true})
+
+			// Add domain to user block list
+			if _, err := f.WriteString(c.Param("key")); err != nil {
+				logger.Critical(err)
+			}
+		} else {
+			_ = blockCache.Set(c.Param("key"), false)
+			c.IndentedJSON(http.StatusOK, gin.H{"success": true})
+
+			personalBlockList := ""
+			// Remove domain from user block list
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				line := scanner.Text()
+				if line != c.Param("key") {
+					personalBlockList = personalBlockList + line
+				}
+			}
+			f.Write([]byte(personalBlockList))
+		}
 	})
 
 	router.GET("/questioncache", func(c *gin.Context) {
