@@ -74,7 +74,7 @@ func StartAPIServer(config *Config,
 			c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 
 			// Add domain to user block list
-			if _, err := f.WriteString(c.Param("key")); err != nil {
+			if _, err := f.WriteString(c.Param("key") + "\n"); err != nil {
 				logger.Critical(err)
 			}
 		} else {
