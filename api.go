@@ -60,6 +60,23 @@ func StartAPIServer(config *Config,
 		c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 	})
 
+	router.GET("/blockcache/personal", func(c *gin.Context) {
+		filePath := filepath.FromSlash("sources/personal.list")
+		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
+		if err != nil {
+			logger.Critical(err)
+		}
+		defer f.Close()
+		personalBlockList := []string{}
+
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := scanner.Text()
+			personalBlockList = append(personalBlockList, line)
+		}
+		c.IndentedJSON(http.StatusOK, gin.H{"personalBlockList": personalBlockList})
+	})
+
 	router.GET("/blockcache/set/:key", func(c *gin.Context) {
 		filePath := filepath.FromSlash("sources/personal.list")
 		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
