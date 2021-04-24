@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/gin-contrib/cors.v1"
@@ -61,7 +62,7 @@ func StartAPIServer(config *Config,
 
 	router.GET("/blockcache/set/:key", func(c *gin.Context) {
 		filePath := filepath.FromSlash("sources/personal.list")
-		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			logger.Critical(err)
 		}
@@ -86,10 +87,15 @@ func StartAPIServer(config *Config,
 			scanner := bufio.NewScanner(f)
 			for scanner.Scan() {
 				line := scanner.Text()
-				if line != c.Param("key") {
-					personalBlockList = personalBlockList + line
+				if strings.Replace(line, "\n", "", 1) != c.Param("key") {
+					personalBlockList = personalBlockList + "\n" + line
 				}
 			}
+			if scanner.Err() != nil {
+				logger.Critical("error while reading personal block list")
+				return
+			}
+			f.Truncate(0)
 			f.Write([]byte(personalBlockList))
 		}
 	})
