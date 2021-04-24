@@ -79,7 +79,8 @@ func StartAPIServer(config *Config,
 				logger.Critical(err)
 			}
 		} else {
-			_ = blockCache.Set(c.Param("key"), false)
+			//_ = blockCache.Set(c.Param("key"), false)
+			blockCache.Remove(c.Param("key"))
 			c.IndentedJSON(http.StatusOK, gin.H{"success": true})
 
 			personalBlockList := ""
