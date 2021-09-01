@@ -1,7 +1,7 @@
 FROM golang:alpine
 LABEL mantainer="integrii@gmail.com"
 
-ADD *.go /go/src/github.com/looterz/grimd/
+ADD *.* /go/src/github.com/looterz/grimd/
 WORKDIR /go/src/github.com/looterz/grimd
 RUN \
   apk --no-cache add git && \
