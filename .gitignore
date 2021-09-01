@@ -1,6 +1,6 @@
 .vscode
 *.test
 pprof/
-grimd
+grimd.exe
 *.swp
 .idea
