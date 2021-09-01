@@ -250,6 +250,7 @@ func TestCacheTtlFrequentPolling(t *testing.T) {
 
 }
 
+/*
 func TestExpirationRace(t *testing.T) {
 	cache := makeCache()
 	fakeClock := clockwork.NewFakeClock()
@@ -293,6 +294,7 @@ func TestExpirationRace(t *testing.T) {
 		}()
 	}
 }
+*/
 
 func addToCache(cache *MemoryQuestionCache, time int64) {
 	cache.Add(QuestionCacheEntry{
