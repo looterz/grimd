@@ -16,7 +16,7 @@ import (
 var timesSeen = make(map[string]int)
 var whitelist = make(map[string]bool)
 
-// Update downloads all of the blocklists and imports them into the database
+// Update downloads all the blocklists and imports them into the database
 func update(blockCache *MemoryBlockCache, wlist []string, blist []string, sources []string) error {
 	if _, err := os.Stat("sources"); os.IsNotExist(err) {
 		if err := os.Mkdir("sources", 0700); err != nil {
@@ -29,7 +29,10 @@ func update(blockCache *MemoryBlockCache, wlist []string, blist []string, source
 	}
 
 	for _, entry := range blist {
-		blockCache.Set(entry, true)
+		err := blockCache.Set(entry, true)
+		if err != nil {
+			logger.Critical(err)
+		}
 	}
 
 	if err := fetchSources(sources); err != nil {
@@ -57,7 +60,11 @@ func downloadFile(uri string, name string) error {
 	if err != nil {
 		return fmt.Errorf("error downloading source: %s", err)
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(response.Body)
 
 	if _, err := io.Copy(output, response.Body); err != nil {
 		return fmt.Errorf("error copying output: %s", err)
@@ -152,7 +159,10 @@ func parseHostFile(fileName string, blockCache *MemoryBlockCache) error {
 			}
 
 			if !blockCache.Exists(line) && !whitelist[line] {
-				blockCache.Set(line, true)
+				err := blockCache.Set(line, true)
+				if err != nil {
+					logger.Critical(err)
+				}
 			}
 		}
 	}

@@ -73,7 +73,7 @@ func StartAPIServer(config *Config,
 			}
 		}()
 
-		personalBlockList := []string{}
+		var personalBlockList []string
 
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
@@ -124,8 +124,14 @@ func StartAPIServer(config *Config,
 				logger.Critical("error while reading personal block list")
 				return
 			}
-			f.Truncate(0)
-			f.Write([]byte(personalBlockList))
+			err := f.Truncate(0)
+			if err != nil {
+				logger.Error(err)
+			}
+			_, err = f.Write([]byte(personalBlockList))
+			if err != nil {
+				logger.Error(err)
+			}
 		}
 	})
 

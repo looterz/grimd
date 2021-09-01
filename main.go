@@ -46,7 +46,7 @@ func reloadBlockCache(config *Config,
 	}
 
 	if config.UseDrbl > 0 {
-		drblPeers, _ = drblpeer.NewPeerListFromYamlFile(config.DrblPeersFilename, config.DrblBlockWeight, config.DrblTimeout, (config.DrblDebug > 0))
+		drblPeers, _ = drblpeer.NewPeerListFromYamlFile(config.DrblPeersFilename, config.DrblBlockWeight, config.DrblTimeout, config.DrblDebug > 0)
 		if config.DrblDebug > 0 {
 			log.Println("Drbl Debug is ON")
 			drblPeers.Debug = true
@@ -120,7 +120,10 @@ forever:
 				break forever
 			case syscall.SIGHUP:
 				logger.Error("SIGHUP received: rotating logs\n")
-				loggingState.reopen()
+				err := loggingState.reopen()
+				if err != nil {
+					logger.Error(err)
+				}
 			}
 		case <-reloadChan:
 			blockCache, apiServer, err = reloadBlockCache(config, blockCache, questionCache, drblPeers, apiServer, server, reloadChan)

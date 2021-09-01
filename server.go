@@ -79,9 +79,15 @@ func (s *Server) Stop() {
 		s.handler.muActive.Unlock()
 	}
 	if s.udpServer != nil {
-		s.udpServer.Shutdown()
+		err := s.udpServer.Shutdown()
+		if err != nil {
+			logger.Critical(err)
+		}
 	}
 	if s.tcpServer != nil {
-		s.tcpServer.Shutdown()
+		err := s.tcpServer.Shutdown()
+		if err != nil {
+			logger.Critical(err)
+		}
 	}
 }

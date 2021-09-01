@@ -43,15 +43,6 @@ func (e CacheIsFull) Error() string {
 	return "Cache is Full"
 }
 
-// SerializerError type
-type SerializerError struct {
-}
-
-// Error formats an error for the SerializerError type
-func (e SerializerError) Error() string {
-	return "Serializer error"
-}
-
 // Mesg represents a cache entry
 type Mesg struct {
 	Msg            *dns.Msg
@@ -162,7 +153,7 @@ func (c *MemoryCache) Remove(key string) {
 	c.mu.Unlock()
 }
 
-// Exists returns whether or not a key exists in the cache
+// Exists returns whether a key exists in the cache
 func (c *MemoryCache) Exists(key string) bool {
 	key = strings.ToLower(key)
 
@@ -179,7 +170,7 @@ func (c *MemoryCache) Length() int {
 	return len(c.Backend)
 }
 
-// Full returns whether or not the cache is full
+// Full returns whether the cache is full
 func (c *MemoryCache) Full() bool {
 	if c.Maxcount == 0 {
 		return false
@@ -239,7 +230,7 @@ func (c *MemoryBlockCache) Remove(key string) {
 func (c *MemoryBlockCache) Set(key string, value bool) error {
 	c.mu.Lock()
 	if strings.HasPrefix(key, "~") {
-		// get rid of the ~ prefix 
+		// get rid of the ~ prefix
 		runes := []rune(key)
 		ex := string(runes[1:])
 		re, err := regexp.Compile(ex)
@@ -258,7 +249,7 @@ func (c *MemoryBlockCache) Set(key string, value bool) error {
 	return nil
 }
 
-// Exists returns whether or not a key exists in the cache
+// Exists returns whether a key exists in the cache
 func (c *MemoryBlockCache) Exists(key string) bool {
 	key = strings.ToLower(key)
 

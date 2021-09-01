@@ -15,6 +15,9 @@ func BenchmarkResolver(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		c.Exchange(m, testNameserver)
+		_, _, err := c.Exchange(m, testNameserver)
+		if err != nil {
+			logger.Error(err)
+		}
 	}
 }

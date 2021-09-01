@@ -66,7 +66,7 @@ func parseLogConfig(logConfigString string) (*logConfig, error) {
 		if match != nil {
 			l, err := parseLogLevel(match[2])
 			if err != nil {
-				return nil, fmt.Errorf("Error while parsing '%s': %s", match[0], err.Error())
+				return nil, fmt.Errorf("error while parsing '%s': %s", match[0], err.Error())
 			}
 			result.files = append(result.files, fileConfig{match[1], l})
 			continue
@@ -76,7 +76,7 @@ func parseLogConfig(logConfigString string) (*logConfig, error) {
 		if match != nil {
 			l, err := parseLogLevel(match[2])
 			if err != nil {
-				return nil, fmt.Errorf("Error while parsing '%s': %s", match[0], err.Error())
+				return nil, fmt.Errorf("error while parsing '%s': %s", match[0], err.Error())
 			}
 			switch match[1] {
 			case "syslog":
@@ -88,7 +88,7 @@ func parseLogConfig(logConfigString string) (*logConfig, error) {
 			}
 		}
 
-		return nil, fmt.Errorf("Error: uknown log config fragment: '%s'", part)
+		return nil, fmt.Errorf("error: uknown log config fragment: '%s'", part)
 
 	}
 	return &result, nil
@@ -152,7 +152,10 @@ func createFileLoggers(files []fileConfig, moduleName string) ([]logging.Backend
 		b, file, err := createFileLogger(f, moduleName)
 		if err != nil {
 			for _, toClose := range openFiles {
-				toClose.Close()
+				err := toClose.Close()
+				if err != nil {
+					return nil, nil, err
+				}
 			}
 			return nil, nil, err
 		}
@@ -204,7 +207,10 @@ func loggerInit(cfg string) (loggingState, error) {
 
 func (s loggingState) cleanUp() {
 	for _, f := range s.files {
-		f.Close()
+		err := f.Close()
+		if err != nil {
+			logger.Error(err)
+		}
 	}
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 
@@ -22,7 +23,7 @@ func TestLogConfigParsing(t *testing.T) {
 			in: "file:grimd.log@0",
 			out: &logConfig{
 				files: []fileConfig{
-					fileConfig{
+					{
 						name:  "grimd.log",
 						level: logging.WARNING,
 					},
@@ -34,11 +35,11 @@ func TestLogConfigParsing(t *testing.T) {
 			in: "file:grimd.log@0,file:something.log@1",
 			out: &logConfig{
 				files: []fileConfig{
-					fileConfig{
+					{
 						name:  "grimd.log",
 						level: logging.WARNING,
 					},
-					fileConfig{
+					{
 						name:  "something.log",
 						level: logging.INFO,
 					},
@@ -49,17 +50,17 @@ func TestLogConfigParsing(t *testing.T) {
 		{
 			in:  "file:grimd.log@aa",
 			out: nil,
-			err: fmt.Errorf("Error while parsing 'file:grimd.log@aa': 'aa' is not an integer"),
+			err: fmt.Errorf("error while parsing 'file:grimd.log@aa': 'aa' is not an integer"),
 		},
 		{
 			in:  "syslog@aa",
 			out: nil,
-			err: fmt.Errorf("Error while parsing 'syslog@aa': 'aa' is not an integer"),
+			err: fmt.Errorf("error while parsing 'syslog@aa': 'aa' is not an integer"),
 		},
 		{
 			in:  "fail:grimd.log@1",
 			out: nil,
-			err: fmt.Errorf("Error: uknown log config fragment: 'fail:grimd.log@1'"),
+			err: fmt.Errorf("error: uknown log config fragment: 'fail:grimd.log@1'"),
 		},
 		{
 			in: "syslog@0",
@@ -75,7 +76,7 @@ func TestLogConfigParsing(t *testing.T) {
 			in: "file:grimd.log@1,syslog@1",
 			out: &logConfig{
 				files: []fileConfig{
-					fileConfig{
+					{
 						name:  "grimd.log",
 						level: logging.INFO,
 					},
@@ -101,7 +102,7 @@ func TestLogConfigParsing(t *testing.T) {
 			in: "file:grimd.log@2,syslog@1,stderr@0",
 			out: &logConfig{
 				files: []fileConfig{
-					fileConfig{
+					{
 						name:  "grimd.log",
 						level: logging.DEBUG,
 					},
@@ -136,7 +137,11 @@ func TestCreateLogFile(t *testing.T) {
 	t.SkipNow()
 	dir, err := ioutil.TempDir("", "test")
 	assert.Nil(t, err)
-	defer os.RemoveAll(dir)
+	defer func(path string) {
+		err := os.RemoveAll(path)
+		if err != nil {
+		}
+	}(dir)
 
 	var testCases = []struct {
 		in  string
@@ -159,8 +164,14 @@ func TestCreateLogFile(t *testing.T) {
 			assert.Equal(t, test.err, err)
 			if err == nil {
 				assert.NotNil(t, result)
-				result.Close()
-				os.Remove(test.in)
+				err := result.Close()
+				if err != nil {
+					logger.Critical(err)
+				}
+				err = os.Remove(test.in)
+				if err != nil {
+					logger.Critical(err)
+				}
 			}
 		})
 	}
@@ -170,7 +181,12 @@ func TestCreateFileLogger(t *testing.T) {
 	t.SkipNow()
 	dir, err := ioutil.TempDir("", "test")
 	assert.Nil(t, err)
-	defer os.RemoveAll(dir)
+	defer func(path string) {
+		err := os.RemoveAll(path)
+		if err != nil {
+			logger.Critical(err)
+		}
+	}(dir)
 
 	var testCases = []struct {
 		in  string
@@ -189,7 +205,10 @@ func TestCreateFileLogger(t *testing.T) {
 			if err == nil {
 				assert.NotNil(t, logger)
 				assert.NotNil(t, file)
-				file.Close()
+				err := file.Close()
+				if err != nil {
+					log.Println(err)
+				}
 			}
 		})
 	}

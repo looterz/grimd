@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -135,7 +136,11 @@ func (r *Resolver) DoHLookup(url string, timeout int, req *dns.Msg) (*dns.Msg, e
 		return nil, ResolvError{qname, "HTTPS", []string{url}}
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(resp.Body)
 
 	//Check the request went ok
 	if resp.StatusCode != http.StatusOK {
