@@ -46,7 +46,12 @@ func downloadFile(uri string, name string) error {
 	if err != nil {
 		return fmt.Errorf("error creating file: %s", err)
 	}
-	defer output.Close()
+
+	defer func() {
+		if err := output.Close(); err != nil {
+			logger.Criticalf("Error closing file: %s\n", err)
+		}
+	}()
 
 	response, err := http.Get(uri)
 	if err != nil {
@@ -124,7 +129,13 @@ func parseHostFile(fileName string, blockCache *MemoryBlockCache) error {
 	if err != nil {
 		return fmt.Errorf("error opening file: %s", err)
 	}
-	defer file.Close()
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Criticalf("Error closing file: %s\n", err)
+		}
+	}()
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()

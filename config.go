@@ -179,7 +179,12 @@ func generateConfig(path string) error {
 	if err != nil {
 		return fmt.Errorf("could not generate config: %s", err)
 	}
-	defer output.Close()
+
+	defer func() {
+		if err := output.Close(); err != nil {
+			logger.Criticalf("Error closing file: %s\n", err)
+		}
+	}()
 
 	r := strings.NewReader(fmt.Sprintf(defaultConfig, ConfigVersion))
 	if _, err := io.Copy(output, r); err != nil {

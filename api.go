@@ -62,11 +62,17 @@ func StartAPIServer(config *Config,
 
 	router.GET("/blockcache/personal", func(c *gin.Context) {
 		filePath := filepath.FromSlash("sources/personal.list")
-		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
+		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0600)
 		if err != nil {
 			logger.Critical(err)
 		}
-		defer f.Close()
+
+		defer func() {
+			if err := f.Close(); err != nil {
+				logger.Criticalf("Error closing file: %s\n", err)
+			}
+		}()
+
 		personalBlockList := []string{}
 
 		scanner := bufio.NewScanner(f)
@@ -79,11 +85,16 @@ func StartAPIServer(config *Config,
 
 	router.GET("/blockcache/set/:key", func(c *gin.Context) {
 		filePath := filepath.FromSlash("sources/personal.list")
-		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0600)
 		if err != nil {
 			logger.Critical(err)
 		}
-		defer f.Close()
+
+		defer func() {
+			if err := f.Close(); err != nil {
+				logger.Criticalf("Error closing file: %s\n", err)
+			}
+		}()
 
 		_, err = blockCache.Get(c.Param("key"))
 		if err == (KeyNotFound{c.Param("key")}) {
