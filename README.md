@@ -11,7 +11,7 @@ Based on [kenshinx/godns](https://github.com/kenshinx/godns) and [miekg/dns](htt
 go install github.com/looterz/grimd@latest
 ```
 
-You can also download one of the [releases](https://github.com/looterz/grimd/releases), detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki).
+You can also download one of the [releases](https://github.com/looterz/grimd/releases) or [docker images](https://github.com/looterz/grimd/pkgs/container/grimd). Detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki).
 
 # Configuration
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
