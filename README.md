@@ -1,5 +1,4 @@
 # grimd
-[![Travis](https://img.shields.io/travis/looterz/grimd.svg?style=flat-square)](https://travis-ci.org/looterz/grimd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/looterz/grimd?style=flat-square)](https://goreportcard.com/report/github.com/looterz/grimd)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/looterz/grimd)
 
