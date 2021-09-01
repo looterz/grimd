@@ -8,7 +8,7 @@ Based on [kenshinx/godns](https://github.com/kenshinx/godns) and [miekg/dns](htt
 
 # Installation
 ```
-go get github.com/looterz/grimd
+go install github.com/looterz/grimd@latest
 ```
 
 You can also download one of the [releases](https://github.com/looterz/grimd/releases), detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki).

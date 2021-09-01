@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -46,6 +47,7 @@ func TestBlockCache(t *testing.T) {
 
 	cache := &MemoryBlockCache{
 		Backend: make(map[string]bool),
+		Special: make(map[string]*regexp.Regexp),
 	}
 
 	if err := cache.Set(testDomain, true); err != nil {
@@ -80,6 +82,7 @@ func TestBlockCacheGlob(t *testing.T) {
 
 	cache := &MemoryBlockCache{
 		Backend: make(map[string]bool),
+		Special: make(map[string]*regexp.Regexp),
 	}
 
 	if err := cache.Set(globDomain1, true); err != nil {
@@ -276,8 +279,18 @@ func TestExpirationRace(t *testing.T) {
 
 	for i := 0; i < 1000; i++ {
 		fakeClock.Advance(time.Duration(100) * time.Millisecond)
-		go cache.Get(testDomain)
-		go cache.Set(testDomain, m, true)
+		go func() {
+			_, _, err := cache.Get(testDomain)
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+		go func() {
+			err := cache.Set(testDomain, m, true)
+			if err != nil {
+				t.Error(err)
+			}
+		}()
 	}
 }
 
