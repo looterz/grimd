@@ -117,14 +117,18 @@ Requires golang 1.7 or higher, you build grimd like any other golang application
 env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
 
-# Run container and test
-
+# Docker
+Run container and test
+```shell
 mkdir sources
 docker build -t grimd:latest . && \
 docker run -v $PWD/sources:/sources --rm -it -P --name grimd-test grimd:latest --config /sources/grimd.toml --update
+```
 
-# For Mac docker, must set 'api = "0.0.0.0:8080"' instead of 'api = "127.0.0.1:8080"' to get networking correct
-# curl -H "Accept: application/json"   http://127.0.0.1:55006/application/active
+For Mac docker, must set 'api = "0.0.0.0:8080"' instead of 'api = "127.0.0.1:8080"' to get networking correct
+```shell
+curl -H "Accept: application/json"   http://127.0.0.1:55006/application/active
+```
 
 # Web API
 A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
