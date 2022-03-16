@@ -10,13 +10,12 @@ builds:
       - arm64
 dockers:
     dockerfile: Dockerfile
-  -
-    image_templates:
-    - "ghcr.io/looterz/grimd:{{ .Tag }}"
-    - "ghcr.io/looterz/grimd:latest"
+    - image_templates:
+      - "ghcr.io/looterz/grimd:{{ .Tag }}"
+      - "ghcr.io/looterz/grimd:latest"
     build_flag_templates:
-    - "--pull"
-    - "--label=org.opencontainers.image.created={{.Date}}"
-    - "--label=org.opencontainers.image.title={{.ProjectName}}"
-    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-    - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
