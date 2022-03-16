@@ -10,9 +10,10 @@ builds:
       - arm64
 dockers:
     dockerfile: Dockerfile
+  -
     image_templates:
-    - "ghcr.io/looterz/grimd:latest"
     - "ghcr.io/looterz/grimd:{{ .Tag }}"
+    - "ghcr.io/looterz/grimd:latest"
     build_flag_templates:
     - "--pull"
     - "--label=org.opencontainers.image.created={{.Date}}"
