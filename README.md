@@ -13,6 +13,12 @@ go install github.com/looterz/grimd@latest
 
 You can also download one of the [releases](https://github.com/looterz/grimd/releases) or [docker images](https://github.com/looterz/grimd/pkgs/container/grimd). Detailed guides and resources can be found on the [wiki](https://github.com/looterz/grimd/wiki).
 
+# Docker Installation
+To quickly get grimd up and running with docker, run
+```
+docker run -d -p 53:53/udp -p 53:53/tcp ghcr.io/looterz/grimd:latest
+```
+
 # Configuration
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
@@ -117,7 +123,7 @@ Requires golang 1.7 or higher, you build grimd like any other golang application
 env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 ```
 
-# Docker
+# Building Docker
 Run container and test
 ```shell
 mkdir sources
@@ -125,9 +131,9 @@ docker build -t grimd:latest . && \
 docker run -v $PWD/sources:/sources --rm -it -P --name grimd-test grimd:latest --config /sources/grimd.toml --update
 ```
 
-For Mac docker, must set 'api = "0.0.0.0:8080"' instead of 'api = "127.0.0.1:8080"' to get networking correct
+For Mac docker set `'api = "0.0.0.0:8080"'` instead of `'api = "127.0.0.1:8080"'`.
 ```shell
-curl -H "Accept: application/json"   http://127.0.0.1:55006/application/active
+curl -H "Accept: application/json" http://127.0.0.1:55006/application/active
 ```
 
 # Web API
