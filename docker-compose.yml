@@ -1,0 +1,6 @@
+services:
+  grimd:
+    image: ghcr.io/looterz/grimd:latest
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"

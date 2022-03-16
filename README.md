@@ -20,6 +20,11 @@ To quickly get grimd up and running with docker, run
 docker run -d -p 53:53/udp -p 53:53/tcp ghcr.io/looterz/grimd:latest
 ```
 
+Alternatively, download the [docker-compose.yml](https://raw.githubusercontent.com/looterz/grimd/master/docker-compose.yml) file and launch it using docker-compose.
+```
+docker-compose up -d
+```
+
 # Configuration
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
