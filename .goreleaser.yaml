@@ -9,7 +9,7 @@ builds:
       - amd64
       - arm64
 dockers:
-  - image_templates: 
+    image_templates:
     - ["ghcr.io/looterz/grimd:latest"]
     - ["ghcr.io/looterz/grimd:{{ .Version }}"]
     dockerfile: Dockerfile
