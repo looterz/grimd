@@ -137,7 +137,8 @@ docker build -t grimd:latest . && \
 docker run -v $PWD/sources:/sources --rm -it -P --name grimd-test grimd:latest --config /sources/grimd.toml --update
 ```
 
-For Mac docker set `'api = "0.0.0.0:8080"'` instead of `'api = "127.0.0.1:8080"'`.
+By default, if the program runs in a docker, it will automatically replace `127.0.0.1` in the default configuration with `0.0.0.0` to ensure that the API interface is available.
+
 ```shell
 curl -H "Accept: application/json" http://127.0.0.1:55006/application/active
 ```

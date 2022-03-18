@@ -13,6 +13,20 @@ import (
 	"gopkg.in/gin-contrib/cors.v1"
 )
 
+func isRunningInDockerContainer() bool {
+	// slightly modified from blog: https://paulbradley.org/indocker/
+	// docker creates a .dockerenv file at the root
+	// of the directory tree inside the container.
+	// if this file exists then the viewer is running
+	// from inside a container so return true
+
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	return false
+}
+
 // StartAPIServer starts the API server
 func StartAPIServer(config *Config,
 	reloadChan chan bool,
@@ -23,6 +37,15 @@ func StartAPIServer(config *Config,
 	}
 
 	router := gin.Default()
+
+	// Automatically replace the default listening address in the docker with `0.0.0.0`
+	if isRunningInDockerContainer() {
+		const localhost = "127.0.0.1:"
+		if strings.HasPrefix(config.API, localhost) {
+			config.API = strings.Replace(config.API, localhost, "0.0.0.0:", 1)
+		}
+	}
+
 	server := &http.Server{
 		Addr:    config.API,
 		Handler: router,
