@@ -5,7 +5,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf // indirect
 	github.com/elico/dns_resolver v0.0.0-20170210091832-f1a4068131f1 // indirect
 	github.com/elico/drbl-peer v0.0.0-20190202055151-d5a0a95c4b84
-	github.com/gin-gonic/gin v1.7.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/miekg/dns v1.1.25
