@@ -29,18 +29,16 @@ docker-compose up -d
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.6"
+version = "1.0.8"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
-"http://mirror1.malwaredomains.com/files/justdomains",
+"https://mirror1.malwaredomains.com/files/justdomains",
 "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-"http://sysctl.org/cameleon/hosts",
-"https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
+"https://sysctl.org/cameleon/hosts",
 "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
 "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
-"http://hosts-file.net/ad_servers.txt",
-"https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt"
+"https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt"
 ]
 
 # list of locations to recursively read blocklists from (warning, every file found is assumed to be a hosts-file or domain list)
@@ -67,7 +65,7 @@ bind = "0.0.0.0:53"
 api = "127.0.0.1:8080"
 
 # response to blocked queries with a NXDOMAIN
-NXDomain = false
+nxdomain = false
 
 # ipv4 address to forward blocked queries to
 nullroute = "0.0.0.0"
