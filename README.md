@@ -17,7 +17,7 @@ You can also download one of the [releases](https://github.com/looterz/grimd/rel
 # Docker Installation
 To quickly get grimd up and running with docker, run
 ```
-docker run -d -p 53:53/udp -p 53:53/tcp ghcr.io/looterz/grimd:latest
+docker run -d -p 53:53/udp -p 53:53/tcp -p 8080:8080/tcp ghcr.io/looterz/grimd:latest
 ```
 
 Alternatively, download the [docker-compose.yml](https://raw.githubusercontent.com/looterz/grimd/master/docker-compose.yml) file and launch it using docker-compose.
