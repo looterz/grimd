@@ -10,7 +10,7 @@ builds:
       - arm64
 dockers:
   - image_templates: ["ghcr.io/looterz/grimd:latest"]
-    dockerfile: Dockerfile
+    dockerfile: docker/Dockerfile.gorelease
     build_flag_templates:
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}

@@ -131,7 +131,7 @@ env GOOS=linux GOARCH=amd64 go build -v github.com/looterz/grimd
 Run container and test
 ```shell
 mkdir sources
-docker build -t grimd:latest . && \
+docker build -t grimd:latest -f docker/Dockerfile . && \
 docker run -v $PWD/sources:/sources --rm -it -P --name grimd-test grimd:latest --config /sources/grimd.toml --update
 ```
 
