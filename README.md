@@ -147,6 +147,13 @@ curl -H "Accept: application/json" http://127.0.0.1:55006/application/active
 # Web API
 A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
 
+
+If you want to enable the default dashboard, make sure the configuration file contains the following:
+
+```toml
+dashboard = true
+```
+
 ![reaper-example](http://i.imgur.com/oXLtqSz.png)
 
 # Speed
