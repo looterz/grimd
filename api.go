@@ -58,13 +58,16 @@ func StartAPIServer(config *Config,
 
 	router.Use(cors.Default())
 
-	router.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusTemporaryRedirect, "/dashboard")
-		c.Abort()
-	})
+	// Serves only if the user configuration enables the dashboard
+	if config.Dashboard {
+		router.GET("/", func(c *gin.Context) {
+			c.Redirect(http.StatusTemporaryRedirect, "/dashboard")
+			c.Abort()
+		})
 
-	dashboardAssets, _ := fs.Sub(dashboardAssets, "dashboard/reaper")
-	router.StaticFS("/dashboard", http.FS(dashboardAssets))
+		dashboardAssets, _ := fs.Sub(dashboardAssets, "dashboard/reaper")
+		router.StaticFS("/dashboard", http.FS(dashboardAssets))
+	}
 
 	router.GET("/blockcache", func(c *gin.Context) {
 		special := make([]string, 0, len(blockCache.Special))

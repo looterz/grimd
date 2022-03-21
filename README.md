@@ -29,7 +29,7 @@ docker-compose up -d
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.8"
+version = "1.0.9"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -57,6 +57,9 @@ logconfig = "file:grimd.log@2,stderr@2"
 
 # apidebug enables the debug mode of the http api library
 apidebug = false
+
+# enable the web interface by default
+dashboard = true
 
 # address to bind to for the DNS server
 bind = "0.0.0.0:53"
