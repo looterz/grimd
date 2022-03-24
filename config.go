@@ -16,7 +16,7 @@ import (
 var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.8"
+var ConfigVersion = "1.0.9"
 
 // Config holds the configuration parameters
 type Config struct {
@@ -41,6 +41,7 @@ type Config struct {
 	CustomDNSRecords  []string
 	ToggleName        string
 	ReactivationDelay uint
+	Dashboard         bool
 	APIDebug          bool
 	DoH               string
 	UseDrbl           int
@@ -79,6 +80,9 @@ logconfig = "file:grimd.log@2,stderr@2"
 
 # apidebug enables the debug mode of the http api library
 apidebug = false
+
+# enable the web interface by default
+dashboard = true
 
 # address to bind to for the DNS server
 bind = "0.0.0.0:53"

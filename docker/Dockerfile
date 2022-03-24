@@ -2,9 +2,10 @@ FROM alpine:3.15.0 as certs
 RUN apk --update add ca-certificates
 
 FROM golang:1.18.0-alpine3.15 AS builder
-RUN apk add git bash gcc musl-dev upx
+RUN apk add git bash gcc musl-dev upx git
 WORKDIR /app
 COPY . .
+RUN git submodule update --init
 RUN go mod tidy
 RUN go test -v ./...
 ENV CGO_ENABLED=0

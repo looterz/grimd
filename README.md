@@ -29,7 +29,7 @@ docker-compose up -d
 If ```grimd.toml``` is not found, it will be generated for you, below is the default configuration.
 ```toml
 # version this config was generated from
-version = "1.0.8"
+version = "1.0.9"
 
 # list of sources to pull blocklists from, stores them in ./sources
 sources = [
@@ -57,6 +57,9 @@ logconfig = "file:grimd.log@2,stderr@2"
 
 # apidebug enables the debug mode of the http api library
 apidebug = false
+
+# enable the web interface by default
+dashboard = true
 
 # address to bind to for the DNS server
 bind = "0.0.0.0:53"
@@ -143,6 +146,13 @@ curl -H "Accept: application/json" http://127.0.0.1:55006/application/active
 
 # Web API
 A restful json api is exposed by default on the local interface, allowing you to build web applications that visualize requests, blocks and the cache. [reaper](https://github.com/looterz/reaper) is the default grimd web frontend.
+
+
+If you want to enable the default dashboard, make sure the configuration file contains the following:
+
+```toml
+dashboard = true
+```
 
 ![reaper-example](http://i.imgur.com/oXLtqSz.png)
 

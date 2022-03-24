@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"embed"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -12,6 +14,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/gin-contrib/cors.v1"
 )
+
+//go:embed dashboard/reaper
+var dashboardAssets embed.FS
 
 func isRunningInDockerContainer() bool {
 	// slightly modified from blog: https://paulbradley.org/indocker/
@@ -52,6 +57,17 @@ func StartAPIServer(config *Config,
 	}
 
 	router.Use(cors.Default())
+
+	// Serves only if the user configuration enables the dashboard
+	if config.Dashboard {
+		router.GET("/", func(c *gin.Context) {
+			c.Redirect(http.StatusTemporaryRedirect, "/dashboard")
+			c.Abort()
+		})
+
+		dashboardAssets, _ := fs.Sub(dashboardAssets, "dashboard/reaper")
+		router.StaticFS("/dashboard", http.FS(dashboardAssets))
+	}
 
 	router.GET("/blockcache", func(c *gin.Context) {
 		special := make([]string, 0, len(blockCache.Special))
