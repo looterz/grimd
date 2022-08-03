@@ -26,7 +26,7 @@ jobs:
         name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.19
       -
         name: Cache Go modules
         uses: actions/cache@v1
@@ -35,6 +35,11 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - 
+        name: Prepare Submodule
+        run: git submodule update --init
+
       -
         name: Tests
         run: |
