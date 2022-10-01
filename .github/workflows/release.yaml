@@ -43,7 +43,6 @@ jobs:
       -
         name: Tests
         run: |
-          go mod tidy
           go test -v ./...
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
