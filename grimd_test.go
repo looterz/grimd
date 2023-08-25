@@ -31,7 +31,6 @@ func TestMultipleARecords(t *testing.T) {
 	config.CustomDNSRecords = []string{
 		"example.com.          IN  A       10.10.0.1 ",
 		"example.com.          IN  A       10.10.0.2 ",
-		"example.cname.com.    IN  CNAME   wikipedia.org",
 	}
 
 	quitActivation := make(chan bool)
