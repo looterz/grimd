@@ -38,7 +38,7 @@ type CustomDNSRecords struct {
 	answer []dns.RR
 }
 
-func (c *CustomDNSRecords) serve(server *DNSHandler) (handler func(dns.ResponseWriter, *dns.Msg)) {
+func (c CustomDNSRecords) serve(server *DNSHandler) (handler func(dns.ResponseWriter, *dns.Msg)) {
 	return func(writer dns.ResponseWriter, req *dns.Msg) {
 		m := new(dns.Msg)
 		m.SetReply(req)

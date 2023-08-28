@@ -68,8 +68,4 @@ func TestMultipleARecords(t *testing.T) {
 	if l := len(reply.Answer); l != 2 {
 		t.Fatalf("Expected 2 returned records but had %v: %v", l, reply.Answer)
 	}
-
-	for _, r := range reply.Answer {
-		println(r.String())
-	}
 }
