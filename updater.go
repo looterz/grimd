@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,6 +17,14 @@ import (
 
 var timesSeen = make(map[string]int)
 var whitelist = make(map[string]bool)
+
+var (
+	blocklistSizeGauge = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: "grimd",
+		Name:      "blocklist_size",
+		Help:      "The total number of domains on the block list",
+	})
+)
 
 // Update downloads all the blocklists and imports them into the database
 func update(blockCache *MemoryBlockCache, wlist []string, blist []string, sources []string) error {
@@ -186,6 +196,8 @@ func PerformUpdate(config *Config, forceUpdate bool) *MemoryBlockCache {
 	if err := updateBlockCache(newBlockCache, config.SourceDirs); err != nil {
 		logger.Fatal(err)
 	}
+
+	blocklistSizeGauge.Set(float64(newBlockCache.Length()))
 
 	return newBlockCache
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"net"
 	"strings"
 	"sync"
@@ -13,6 +15,14 @@ const (
 	notIPQuery = 0
 	_IP4Query  = 4
 	_IP6Query  = 6
+)
+
+var (
+	queryResultCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "grimd",
+		Name:      "query_result",
+		Help:      "The total number of queries processed",
+	}, []string{"blocked"})
 )
 
 // Question type
@@ -203,6 +213,7 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 					// log query
 					NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: true}
 					go questionCache.Add(NewEntry)
+					go queryResultCounter.With(prometheus.Labels{"blocked": "true"}).Add(1)
 
 					// cache the block; we don't know the true TTL for blocked entries: we just enforce our config
 					err := h.cache.Set(key, m, true)
@@ -218,6 +229,7 @@ func (h *DNSHandler) do(config *Config, blockCache *MemoryBlockCache, questionCa
 			// log query
 			NewEntry := QuestionCacheEntry{Date: time.Now().Unix(), Remote: remote.String(), Query: Q, Blocked: false}
 			go questionCache.Add(NewEntry)
+			go queryResultCounter.With(prometheus.Labels{"blocked": "false"}).Add(1)
 
 			mesg, err := h.resolver.Lookup(Net, req, config.Timeout, config.Interval, config.Nameservers, config.DoH)
 
