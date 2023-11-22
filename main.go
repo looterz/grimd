@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
 	"os"
@@ -57,12 +58,25 @@ func reloadBlockCache(config *Config,
 	return blockCache, apiServer, nil
 }
 
+func serveMetrics(addr string) {
+	http.Handle("/metrics", promhttp.Handler())
+	err := http.ListenAndServe(addr, nil)
+
+	if err != nil {
+		logger.Fatal(err)
+	}
+}
+
 func main() {
 	flag.Parse()
 
 	config, err := LoadConfig(configPath)
 	if err != nil {
 		logger.Fatal(err)
+	}
+
+	if config.PrometheusAddr != "" {
+		go serveMetrics(config.PrometheusAddr)
 	}
 
 	loggingState, err := loggerInit(config.LogConfig)

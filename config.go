@@ -16,7 +16,7 @@ import (
 var BuildVersion = "1.0.7"
 
 // ConfigVersion returns the version of grimd, this should be incremented every time the config changes so grimd presents a warning
-var ConfigVersion = "1.0.9"
+var ConfigVersion = "1.0.10"
 
 // Config holds the configuration parameters
 type Config struct {
@@ -49,6 +49,7 @@ type Config struct {
 	DrblBlockWeight   int64
 	DrblTimeout       int
 	DrblDebug         int
+	PrometheusAddr    string
 }
 
 var defaultConfig = `# version this config was generated from
@@ -145,6 +146,10 @@ reactivationdelay = 300
 
 #Dns over HTTPS provider to use.
 DoH = "https://cloudflare-dns.com/dns-query"
+
+# Address for Prometheus to host metrics
+# Set to the empty string to disable
+PrometheusAddr = "127.0.0.1:10005"
 `
 
 // WallClock is the wall clock
